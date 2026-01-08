@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MenuCategory, MenuSubCategory, MenuFormData, MenuItemData } from "@/types/menu"
-import { Camera, X, Plus, Trash2, Wand2 } from "lucide-react"
+import { Camera, X, Plus, Trash2, Wand2, FileText, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 
@@ -33,6 +33,7 @@ export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFor
 
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [analyzingIndex, setAnalyzingIndex] = useState<number | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
 
   const handleAddItem = () => {
     setItems([...items, { name: "", description: "", image_url: "" }])
@@ -48,6 +49,77 @@ export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFor
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
     setItems(newItems)
+  }
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsImporting(true)
+    const reader = new FileReader()
+    
+    reader.onload = async (event) => {
+        const text = event.target?.result
+        if (typeof text !== "string") {
+            setIsImporting(false)
+            return
+        }
+
+        try {
+            const res = await fetch("/api/analyze-menu-text", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text }),
+            })
+
+            const data = await res.json()
+
+            if (res.ok && data.items && Array.isArray(data.items)) {
+                
+                // Convert to MenuItemData structure (add empty image_url)
+                const newItems: MenuItemData[] = data.items.map((item: any) => ({
+                    name: item.name,
+                    description: item.description || "",
+                    image_url: ""
+                }))
+
+                // If current list is just one empty item, replace it. Else append.
+                if (items.length === 1 && !items[0].name && !items[0].description) {
+                    setItems(newItems)
+                } else {
+                    setItems([...items, ...newItems])
+                }
+
+                if (data.mock) {
+                     toast({
+                        title: "Modo Demonstração",
+                        description: "Itens gerados mockados. Configure GOOGLE_API_KEY para usar IA real.",
+                        variant: "destructive"
+                    })
+                } else {
+                    toast({
+                        title: "Sucesso!",
+                        description: `${newItems.length} itens importados do arquivo.`,
+                    })
+                }
+            } else {
+                 throw new Error(data.error || "Falha ao processar arquivo")
+            }
+        } catch (error) {
+            console.error(error)
+             toast({
+                title: "Erro na importação",
+                description: "Não foi possível processar o arquivo de texto.",
+                variant: "destructive"
+            })
+        } finally {
+            setIsImporting(false)
+            // Reset input
+            e.target.value = ""
+        }
+    }
+
+    reader.readAsText(file)
   }
 
   const analyzeImage = async (index: number, imageUrl: string) => {
@@ -169,7 +241,23 @@ export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFor
       </div>
 
       <div className="space-y-4">
-        <Label className="text-lg font-semibold">Itens do Cardápio</Label>
+        <div className="flex items-center justify-between">
+            <Label className="text-lg font-semibold">Itens do Cardápio</Label>
+            <label className="cursor-pointer">
+                <Button type="button" variant="outline" size="sm" disabled={isImporting} className="gap-2" onClick={() => document.getElementById('file-upload')?.click()}>
+                    {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                    Importar do Texto
+                </Button>
+                <input 
+                    id="file-upload"
+                    type="file" 
+                    accept=".txt,.md,.csv,.json"
+                    className="hidden" 
+                    onChange={handleFileImport}
+                    disabled={isImporting}
+                />
+            </label>
+        </div>
         
         {items.map((item, index) => (
             <div key={index} className="space-y-4 rounded-lg border p-4 bg-slate-50 relative">
