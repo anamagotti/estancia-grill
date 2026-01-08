@@ -251,7 +251,19 @@ export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFor
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-             div className="flex gap-2">
+                <SelectItem value="Pré-assada">Pré-assada</SelectItem>
+                <SelectItem value="In natura">In natura</SelectItem>
+                <SelectItem value="Sobra">Sobra</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+            <Label className="text-lg font-semibold">Itens do Cardápio</Label>
+            <div className="flex gap-2">
                 <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => setIsPasteDialogOpen(true)}>
                     <ClipboardPaste className="h-4 w-4" />
                     Colar Texto
@@ -271,19 +283,7 @@ export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFor
                         disabled={isImporting}
                     />
                 </label>
-            </divtton type="button" variant="outline" size="sm" disabled={isImporting} className="gap-2" onClick={() => document.getElementById('file-upload')?.click()}>
-                    {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                    Importar do Texto
-                </Button>
-                <input 
-                    id="file-upload"
-                    type="file" 
-                    accept=".txt,.md,.csv,.json"
-                    className="hidden" 
-                    onChange={handleFileImport}
-                    disabled={isImporting}
-                />
-            </label>
+            </div>
         </div>
         
         {items.map((item, index) => (
