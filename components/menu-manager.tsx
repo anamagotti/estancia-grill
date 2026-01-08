@@ -131,6 +131,28 @@ export function MenuManager() {
     }
   }
 
+  const handleClearMenu = async () => {
+    if (!confirm("ATENÇÃO: Isso excluirá TODOS os itens do cardápio desta data. Tem certeza?")) return
+
+    setIsLoading(true)
+    try {
+        const res = await fetch(`/api/menu?date=${date}`, {
+            method: "DELETE"
+        })
+        if (!res.ok) throw new Error()
+        
+        toast({ title: "Cardápio do dia limpo com sucesso" })
+        fetchItems()
+    } catch (error) {
+        toast({
+            title: "Erro ao limpar",
+            description: "Não foi possível limpar o cardápio.",
+            variant: "destructive"
+        })
+        setIsLoading(false)
+    }
+  }
+
   const handleExportPDF = () => {
     const url = `/api/menu/export-pdf?date=${date}`
     window.open(url, "_blank")
@@ -154,7 +176,11 @@ export function MenuManager() {
             </div>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportPDF}>
+            <Button variant="destructive" variant-outline="true" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={handleClearMenu} disabled={items.length === 0}>
+                <Trash className="mr-2 h-4 w-4" />
+                Limpar Dia
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF} disabled={items.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Exportar PDF
             </Button>

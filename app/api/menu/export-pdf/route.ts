@@ -92,12 +92,19 @@ export async function GET(request: Request) {
 
           .category-section {
             margin-bottom: 40px;
-            page-break-inside: avoid;
+            /* page-break-inside: avoid; removed to fix huge blank spaces */
           }
 
           .category-title {
             font-size: 24px;
             color: #c2410c;
+            border-bottom: 1px solid #fed7aa;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            page-break-after: avoid; /* Keep title with at least one item */
+          }
             border-bottom: 1px solid #fed7aa;
             padding-bottom: 8px;
             margin-bottom: 20px;
