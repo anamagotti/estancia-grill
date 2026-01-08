@@ -176,7 +176,12 @@ export function MenuManager() {
             </div>
         </div>
         <div className="flex gap-2">
-            <Button variant="destructive" variant-outline="true" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={handleClearMenu} disabled={items.length === 0}>
+            <Button 
+                variant="outline" 
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" 
+                onClick={handleClearMenu} 
+                disabled={items.length === 0}
+            >
                 <Trash className="mr-2 h-4 w-4" />
                 Limpar Dia
             </Button>
