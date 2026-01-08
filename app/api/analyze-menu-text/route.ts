@@ -48,9 +48,15 @@ export async function POST(request: Request) {
     for (const modelName of modelsToTry) {
         try {
             console.log(`Trying model: ${modelName} for text analysis...`);
+            
+            // gemini-pro (1.0) does not support responseMimeType: "application/json"
+            const generationConfig = modelName.includes("gemini-pro") && !modelName.includes("1.5") 
+                ? {} 
+                : { responseMimeType: "application/json" };
+
             const model = genAI.getGenerativeModel({ 
                 model: modelName,
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig
             })
 
             const result = await model.generateContent(prompt)
@@ -71,11 +77,14 @@ export async function POST(request: Request) {
         throw new Error(`All models failed. Last error: ${lastError?.message || "Unknown error"}`)
     }
 
-    const jsonResponse = JSON.parse(responseText)
+    // Clean up markdown if present (e.g. ```json ... ```)
+    const cleanedText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    const jsonResponse = JSON.parse(cleanedText)
     
     // Ensure structure is correct
     if (!jsonResponse.items || !Array.isArray(jsonResponse.items)) {
-         throw new Error("Invalid format returned by AI")
+         throw new Error("Invalid format returned by AI: items array missing")
     }
 
     return NextResponse.json({ items: jsonResponse.items })
