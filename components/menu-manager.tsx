@@ -5,13 +5,13 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MenuForm } from "./menu-form"
 import { MenuItem, MenuFormData, MenuCategory } from "@/types/menu"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Plus, FileDown, Trash, Pencil, Calendar } from "lucide-react"
+import { Loader2, Plus, FileDown, Trash, Pencil, Calendar, Copy } from "lucide-react"
 import Image from "next/image"
 
 export function MenuManager() {
@@ -21,6 +21,8 @@ export function MenuManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false)
+  const [copyTargetDate, setCopyTargetDate] = useState("")
   const { toast } = useToast()
 
   const categories: MenuCategory[] = ["Buffet", "Sushi", "Churrasco", "Sobremesa"]
@@ -158,6 +160,64 @@ export function MenuManager() {
     window.open(url, "_blank")
   }
 
+  const handleCopyMenu = async () => {
+    if (!copyTargetDate) {
+      toast({
+        title: "Selecione uma data",
+        description: "Por favor, selecione uma data de destino para copiar o cardápio.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (copyTargetDate === date) {
+      toast({
+        title: "Data inválida",
+        description: "A data de destino deve ser diferente da data atual.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payloads = items.map(item => ({
+        date: copyTargetDate,
+        category: item.category,
+        subcategory: item.subcategory,
+        name: item.name,
+        description: item.description,
+        image_url: item.image_url
+      }))
+
+      const res = await fetch("/api/menu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloads),
+      })
+
+      if (!res.ok) throw new Error()
+
+      toast({ 
+        title: "Cardápio copiado com sucesso",
+        description: `Os itens foram copiados para ${format(new Date(copyTargetDate + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}`
+      })
+      
+      setIsCopyDialogOpen(false)
+      setCopyTargetDate("")
+      
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Erro ao copiar cardápio",
+        description: "Ocorreu um erro ao tentar copiar os itens.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -189,6 +249,14 @@ export function MenuManager() {
                 <FileDown className="mr-2 h-4 w-4" />
                 Exportar PDF
             </Button>
+            <Button 
+                variant="outline" 
+                onClick={() => setIsCopyDialogOpen(true)} 
+                disabled={items.length === 0}
+            >
+                <Copy className="mr-2 h-4 w-4" />
+                Copiar
+            </Button>
             <Button onClick={() => { setEditingItem(null); setIsDialogOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Item
@@ -219,6 +287,44 @@ export function MenuManager() {
             }}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Copiar Cardápio</DialogTitle>
+            <DialogDescription>
+              Copiar {items.length} itens de {format(new Date(date + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })} para outra data.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="target-date" className="text-right text-sm font-medium">
+                Para o dia
+              </label>
+              <Input
+                id="target-date"
+                type="date"
+                value={copyTargetDate}
+                onChange={(e) => setCopyTargetDate(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsCopyDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCopyMenu} disabled={!copyTargetDate || isSubmitting}>
+                {isSubmitting ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Copiando...
+                    </>
+                ) : (
+                    "Copiar"
+                )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

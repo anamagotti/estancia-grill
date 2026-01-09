@@ -29,7 +29,7 @@ interface MenuFormProps {
 
 export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFormProps) {
   const { toast } = useToast()
-  const [date] = useState(initialData?.date || new Date().toISOString().split("T")[0])
+  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split("T")[0])
   const [category, setCategory] = useState<MenuCategory>(initialData?.category || "Buffet")
   const [subcategory, setSubcategory] = useState<MenuSubCategory | undefined>(initialData?.subcategory)
   
@@ -221,7 +221,17 @@ export function MenuForm({ initialData, onSubmit, onCancel, isLoading }: MenuFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label>Data</Label>
+            <Input 
+                type="date" 
+                value={date} 
+                onChange={(e) => setDate(e.target.value)} 
+                required 
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Categoria</Label>
             <Select
