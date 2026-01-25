@@ -385,6 +385,7 @@ export const CHECKLIST_LIMPEZA: ChecklistSection[] = [
     title: "Área de Reciclável e Lixo",
     items: [
       { category: "Área de Lixo", item: "Organização, limpeza e fechamento dos sacos", points: 4 },
+      { category: "Área de Lixo", item: "Fazer a pulverização com produto bico fino", points: 4 },
     ],
   },
   {
