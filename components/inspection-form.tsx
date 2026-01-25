@@ -22,6 +22,7 @@ type Props = {
   userId: string
   franchises: Franchise[]
   defaultFranchiseId: string
+  defaultSector?: string
 }
 
 type ItemResponse = {
@@ -31,7 +32,7 @@ type ItemResponse = {
   photoUrls: string[]
 }
 
-export default function InspectionForm({ userId, franchises, defaultFranchiseId }: Props) {
+export default function InspectionForm({ userId, franchises, defaultFranchiseId, defaultSector }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -271,7 +272,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId 
         </CardContent>
       </Card>
 
-      {SECTORS.map((sector) => {
+      {SECTORS.filter(sector => !defaultSector || sector.id === defaultSector).map((sector) => {
         const score = calculateSectorScore(sector.id)
         return (
           <div key={sector.id} className="space-y-6 pt-6 border-t">
