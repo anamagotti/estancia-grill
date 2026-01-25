@@ -1,7 +1,8 @@
--- Habilitar a extensão pgcrypto se ainda não estiver habilitada
+-- Habilitar a extensão pgcrypto
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Script para criar 16 usuários de limpeza
+-- Script corrigido para criar usuários de limpeza
+-- SEM tentar inserir manualmente na tabela public.users (deixa o trigger agir)
 DO $$
 DECLARE
     i INT;
@@ -11,17 +12,17 @@ DECLARE
     encrypted_pw TEXT;
 BEGIN
     FOR i IN 1..16 LOOP
-        -- Configuração do usuário
+        -- Define email e senha
         temp_email := format('limpeza%s@estanciagrill.com', lpad(i::text, 2, '0'));
         temp_password := 'limpeza123';
-        -- Criptografar senha
         encrypted_pw := crypt(temp_password, gen_salt('bf'));
 
-        -- Verificar se o usuário já existe na tabela auth.users
+        -- Verifica se o usuário NÃO existe antes de criar
         IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = temp_email) THEN
             new_user_id := gen_random_uuid();
 
-            -- Inserir novo usuário na tabela auth.users
+            -- Inserir apenas na tabela de autenticação (auth.users)
+            -- O trigger automático do seu banco vai criar a linha na tabela public.users
             INSERT INTO auth.users (
                 id,
                 email,
@@ -49,23 +50,12 @@ BEGIN
                 '00000000-0000-0000-0000-000000000000',
                 'authenticated'
             );
-            
-            -- O trigger on_auth_user_created deve criar a entrada na tabela public.users automaticamente.
-            -- Mas precisamos garantir que a role seja 'limpeza'.
-            -- Como o trigger é assíncrono ou pode já ter rodado, atualizamos diretamente.
-            
-            -- Aguardar um momento ou forçar update se possível? Não podemos em DO block com trigger.
-            -- Vamos assumir que o sistema usa trigger. Se não usar, teríamos que inserir em public.users também. 
-            
         END IF;
     END LOOP;
 END $$;
 
--- Atualizar as permissões na tabela de usuários para o papel 'limpeza'
+-- Atualiza as permissões (roles) de todos os usuários de limpeza
+-- Isso corrige caso o trigger tenha criado como 'user' padrão
 UPDATE public.users 
 SET role = 'limpeza' 
 WHERE email LIKE 'limpeza%@estanciagrill.com';
-
--- Garantir que a tabela de usuários tenha a coluna franchise_id atualizada se necessário
--- Adicione aqui updates para franchise_id se todos os usuários pertencerem a uma franquia padrão
--- UPDATE public.users SET franchise_id = 'ID_DA_FRANQUIA' WHERE role = 'limpeza';
