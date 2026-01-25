@@ -310,6 +310,13 @@ export const CHECKLIST_LIMPEZA: ChecklistSection[] = [
     ],
   },
   {
+    title: "Hall de Entrada Externo",
+    items: [
+      { category: "Hall Externo", item: "Tirar os matos e limpar guias", points: 4 },
+      { category: "Hall Externo", item: "Tirar lixo e varrer a frente", points: 4 },
+    ],
+  },
+  {
     title: "Buffet",
     items: [
       { category: "Buffet", item: "Limpeza e organização dos balcões e reposição", points: 4 },
