@@ -50,42 +50,55 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     // Input date is YYYY-MM-DD
     const [year, month, day] = inspectionDate.split('-').map(Number)
     const dateObj = new Date(year, month - 1, day)
+    const dateObj = new Date(year, month - 1, day)
     const dayOfWeek = dateObj.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-    // Define items per day indexes (based on order in checklist-data.ts)
-    // 0: Banheiro Clientes, 1: Hall Entrada, 2: Buffet, 3: Alas Escadas (Segunda)
-    // 4: Hall Est, 5: Banheiros Func, 6: Escritórios, 7: Refeitório (Terça)
-    // 8: Estoque Seco, 9: Câmaras Frias, 10: Porta Entrada, 11: Janelas (Quarta)
-    // 12: Playground, 13: Estoque Bebidas, 14: Lixo/Rec/Pulveriza, 15: Manipulação (Quinta)
-    // 16: Estacionamento, 17: Setor Sushi, 18: Churrasqueira, 19: Área Salão (Sexta)
-    // 20: Hall Externo, 21: Quadros, 22: Estroncas (Sábado)
-    // 23: Espelhos, 24: Decorações (Domingo)
+    // As tarefas obrigatórias (índice 0) são sempre incluídas
+    const mandatoryTasks = originalChecklist[0]
 
-    let startIdx = 0
-    let count = 0
+    // Mapeamento de dias para índices de seções DIÁRIAS
+    const dailyTasksStartIndex = 1 // As tarefas diárias começam no índice 1
+    const sectionsPerDay = 4 // Quantas seções por dia
+
+    let startIndex = 0
+    let endIndex = 0
 
     switch (dayOfWeek) {
       case 1: // Segunda
-        startIdx = 0; count = 4; break;
+        startIndex = dailyTasksStartIndex
+        endIndex = startIndex + sectionsPerDay
+        break
       case 2: // Terça
-        startIdx = 4; count = 4; break;
+        startIndex = dailyTasksStartIndex + sectionsPerDay
+        endIndex = startIndex + sectionsPerDay
+        break
       case 3: // Quarta
-        startIdx = 8; count = 4; break;
+        startIndex = dailyTasksStartIndex + sectionsPerDay * 2
+        endIndex = startIndex + sectionsPerDay
+        break
       case 4: // Quinta
-        startIdx = 12; count = 4; break;
+        startIndex = dailyTasksStartIndex + sectionsPerDay * 3
+        endIndex = startIndex + sectionsPerDay
+        break
       case 5: // Sexta
-        startIdx = 16; count = 4; break;
+        startIndex = dailyTasksStartIndex + sectionsPerDay * 4
+        endIndex = startIndex + sectionsPerDay
+        break
       case 6: // Sábado
-        startIdx = 20; count = 3; break;
+        startIndex = dailyTasksStartIndex + sectionsPerDay * 5
+        endIndex = startIndex + sectionsPerDay
+        break
       case 0: // Domingo
-        startIdx = 23; count = 2; break;
+        // Pega as seções restantes
+        startIndex = dailyTasksStartIndex + sectionsPerDay * 6
+        endIndex = originalChecklist.length
+        break
       default:
-        return originalChecklist
+        return [mandatoryTasks] // Retorna apenas as obrigatórias se o dia for inválido
     }
 
-    // The originalChecklist is an array of ChecklistSection
-    // We want to return only the sections starting from startIdx up to startIdx + count
-    return originalChecklist.slice(startIdx, startIdx + count)
+    const dailyTasks = originalChecklist.slice(startIndex, endIndex)
+    return [mandatoryTasks, ...dailyTasks]
   }
 
   const handleItemChange = (itemKey: string, field: keyof ItemResponse, value: string) => {

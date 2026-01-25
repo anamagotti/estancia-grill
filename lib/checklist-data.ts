@@ -298,6 +298,21 @@ export const CHECKLIST_MEDIAS: ChecklistSection[] = [
 
 export const CHECKLIST_LIMPEZA: ChecklistSection[] = [
   {
+    title: "Tarefas Obrigatórias (Todos os Dias)",
+    items: [
+      { category: "Obrigatórias", item: "Limpeza e abastecimento dos banheiros de clientes", points: 5 },
+      { category: "Obrigatórias", item: "Limpeza e abastecimento dos banheiros de funcionários", points: 5 },
+      { category: "Obrigatórias", item: "Limpeza do hall de entrada interno (piso, tapetes)", points: 4 },
+      { category: "Obrigatórias", item: "Limpeza do hall de entrada externo (varrer, tirar lixo)", points: 4 },
+      { category: "Obrigatórias", item: "Limpeza da entrada do estacionamento", points: 4 },
+      { category: "Obrigatórias", item: "Limpeza e organização do buffet", points: 5 },
+      { category: "Obrigatórias", item: "Limpeza da área e vitrine do Sushi", points: 5 },
+      { category: "Obrigatórias", item: "Limpeza dos escritórios (mesas, chão, lixo)", points: 4 },
+      { category: "Obrigatórias", item: "Limpeza do refeitório (mesas, chão)", points: 4 },
+      { category: "Obrigatórias", item: "Limpeza dos vidros e maçanetas das portas de entrada", points: 4 },
+    ],
+  },
+  {
     title: "Banheiro Clientes",
     items: [
       { category: "Banheiro Clientes", item: "Limpeza, higienização e abastecimento", points: 4 },
