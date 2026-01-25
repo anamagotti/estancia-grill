@@ -296,10 +296,158 @@ export const CHECKLIST_MEDIAS: ChecklistSection[] = [
   },
 ]
 
+export const CHECKLIST_LIMPEZA: ChecklistSection[] = [
+  {
+    title: "Banheiro Clientes",
+    items: [
+      { category: "Banheiro Clientes", item: "Limpeza, higienização e abastecimento", points: 4 },
+    ],
+  },
+  {
+    title: "Hall de Entrada",
+    items: [
+      { category: "Hall de Entrada", item: "Limpeza do piso, tapetes e organização", points: 4 },
+    ],
+  },
+  {
+    title: "Buffet",
+    items: [
+      { category: "Buffet", item: "Limpeza e organização dos balcões e reposição", points: 4 },
+    ],
+  },
+  {
+    title: "Alas de Entrada das Escadas",
+    items: [
+      { category: "Alas de Entrada", item: "Limpeza das escadas e corrimãos", points: 4 },
+    ],
+  },
+  {
+    title: "Hall de Entrada Estacionamento",
+    items: [
+      { category: "Hall Estacionamento", item: "Limpeza e organização da entrada", points: 4 },
+    ],
+  },
+  {
+    title: "Banheiros de Funcionários",
+    items: [
+      { category: "Banheiros Funcionários", item: "Limpeza, higienização e abastecimento", points: 4 },
+    ],
+  },
+  {
+    title: "Escritórios",
+    items: [
+      { category: "Escritórios", item: "Limpeza de mesas, chão e retirada de lixo", points: 4 },
+    ],
+  },
+  {
+    title: "Refeitório",
+    items: [
+      { category: "Refeitório", item: "Limpeza das mesas, chão e organização", points: 4 },
+    ],
+  },
+  {
+    title: "Estoque Seco",
+    items: [
+      { category: "Estoque Seco", item: "Organização e limpeza do chão e prateleiras", points: 4 },
+    ],
+  },
+  {
+    title: "Câmaras Frias",
+    items: [
+      { category: "Câmaras Frias", item: "Organização interna e limpeza do piso", points: 4 },
+    ],
+  },
+  {
+    title: "Porta de Entrada",
+    items: [
+      { category: "Porta de Entrada", item: "Limpeza dos vidros e maçanetas", points: 4 },
+    ],
+  },
+  {
+    title: "Janelas",
+    items: [
+      { category: "Janelas", item: "Limpeza dos vidros e caixilhos", points: 4 },
+    ],
+  },
+  {
+    title: "Playground",
+    items: [
+      { category: "Playground", item: "Higienização dos brinquedos e piso", points: 4 },
+    ],
+  },
+  {
+    title: "Estoque de Bebidas",
+    items: [
+      { category: "Estoque de Bebidas", item: "Organização das caixas e limpeza", points: 4 },
+    ],
+  },
+  {
+    title: "Área de Reciclável e Lixo",
+    items: [
+      { category: "Área de Lixo", item: "Organização, limpeza e fechamento dos sacos", points: 4 },
+    ],
+  },
+  {
+    title: "Área de Manipulação",
+    items: [
+      { category: "Área de Manipulação", item: "Higienização de bancadas e utensílios", points: 4 },
+    ],
+  },
+  {
+    title: "Estacionamento",
+    items: [
+      { category: "Estacionamento", item: "Limpeza geral e recolhimento de lixo", points: 4 },
+    ],
+  },
+  {
+    title: "Setor de Sushi",
+    items: [
+      { category: "Setor de Sushi", item: "Higienização da vitrine e área de preparo", points: 4 },
+    ],
+  },
+  {
+    title: "Churrasqueira",
+    items: [
+      { category: "Churrasqueira", item: "Limpeza da grelha, coifa e bancada", points: 4 },
+    ],
+  },
+  {
+    title: "Área do Salão / Bancadas",
+    items: [
+      { category: "Área do Salão", item: "Limpeza e organização das bancadas de serviço", points: 4 },
+    ],
+  },
+  {
+    title: "Quadros",
+    items: [
+      { category: "Decoração", item: "Limpeza e retirada de pó dos quadros", points: 4 },
+    ],
+  },
+  {
+    title: "Estroncas",
+    items: [
+      { category: "Decoração", item: "Limpeza e conservação das estroncas", points: 4 },
+    ],
+  },
+  {
+    title: "Espelhos",
+    items: [
+      { category: "Decoração", item: "Limpeza de marcas e manchas dos espelhos", points: 4 },
+    ],
+  },
+  {
+    title: "Decorações",
+    items: [
+      { category: "Decoração", item: "Limpeza geral dos itens decorativos", points: 4 },
+    ],
+  },
+]
+
 export const SECTORS = [
   { id: "atendimento", name: "Atendimento", checklist: CHECKLIST_ATENDIMENTO },
   { id: "chopp", name: "Chopp", checklist: CHECKLIST_CHOPP },
   { id: "cozinha", name: "Cozinha", checklist: CHECKLIST_COZINHA },
+  { id: "limpeza", name: "Limpeza Geral", checklist: CHECKLIST_LIMPEZA },
   { id: "medias", name: "Médias dos Preparos", checklist: CHECKLIST_MEDIAS },
 ] as const
 
