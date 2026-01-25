@@ -19,6 +19,7 @@ export default async function DashboardPage() {
 
   const currentUser = await getCurrentUser()
   const isAdmin = currentUser?.role === "admin"
+  const isCleaner = currentUser?.role === "limpeza"
 
   // Buscar dados do usuário
   const { data: userData } = await supabase.from("users").select("*, franchises(*)").eq("id", user.id).single()
@@ -68,73 +69,77 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground">Bem-vindo ao sistema de vistorias automatizado</p>
         </div>
 
-        <div className="mb-8 grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Total de Vistorias</CardTitle>
-              <CardDescription>Vistorias realizadas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{count || 0}</p>
-            </CardContent>
-          </Card>
+        {!isCleaner && (
+          <div className="mb-8 grid gap-6 md:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Total de Vistorias</CardTitle>
+                <CardDescription>Vistorias realizadas</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-4xl font-bold">{count || 0}</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Este Mês</CardTitle>
-              <CardDescription>Vistorias do mês atual</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">
-                {
-                  inspections?.filter((i) => {
-                    const date = new Date(i.inspection_date)
-                    const now = new Date()
-                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
-                  }).length
-                }
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Este Mês</CardTitle>
+                <CardDescription>Vistorias do mês atual</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-4xl font-bold">
+                  {
+                    inspections?.filter((i) => {
+                      const date = new Date(i.inspection_date)
+                      const now = new Date()
+                      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
+                    }).length
+                  }
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Média Geral</CardTitle>
-              <CardDescription>Média de aproveitamento</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">
-                {inspections && inspections.length > 0
-                  ? (inspections.reduce((acc, i) => acc + (i.percentage || 0), 0) / inspections.length).toFixed(1)
-                  : "0"}
-                %
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Média Geral</CardTitle>
+                <CardDescription>Média de aproveitamento</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-4xl font-bold">
+                  {inspections && inspections.length > 0
+                    ? (inspections.reduce((acc, i) => acc + (i.percentage || 0), 0) / inspections.length).toFixed(1)
+                    : "0"}
+                  %
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-2 border-orange-200 shadow-lg transition-shadow hover:shadow-xl">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-orange-100 p-3">
-                  <Plus className="h-6 w-6 text-orange-600" />
+          {!isCleaner && (
+            <Card className="border-2 border-orange-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-orange-100 p-3">
+                    <Plus className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Nova Vistoria</CardTitle>
+                    <CardDescription>Criar uma nova vistoria</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Nova Vistoria</CardTitle>
-                  <CardDescription>Criar uma nova vistoria</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full" size="lg">
-                <Link href="/dashboard/inspection/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Iniciar Vistoria
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full" size="lg">
+                  <Link href="/dashboard/inspection/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Iniciar Vistoria
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-2 border-green-200 shadow-lg transition-shadow hover:shadow-xl">
             <CardHeader>
@@ -158,71 +163,77 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-blue-200 shadow-lg transition-shadow hover:shadow-xl">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-blue-100 p-3">
-                  <FileText className="h-6 w-6 text-blue-600" />
+          {!isCleaner && (
+            <Card className="border-2 border-blue-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-blue-100 p-3">
+                    <FileText className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Histórico</CardTitle>
+                    <CardDescription>Ver vistorias anteriores</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Histórico</CardTitle>
-                  <CardDescription>Ver vistorias anteriores</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
-                <Link href="/dashboard/history">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Ver Histórico
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
+                  <Link href="/dashboard/history">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Ver Histórico
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="border-2 border-green-200 shadow-lg transition-shadow hover:shadow-xl">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-green-100 p-3">
-                  <BarChart3 className="h-6 w-6 text-green-600" />
+          {!isCleaner && (
+            <Card className="border-2 border-green-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-green-100 p-3">
+                    <BarChart3 className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Análises</CardTitle>
+                    <CardDescription>Gráficos e relatórios</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Análises</CardTitle>
-                  <CardDescription>Gráficos e relatórios</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
-                <Link href="/dashboard/analytics">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Ver Análises
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
+                  <Link href="/dashboard/analytics">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Ver Análises
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="border-2 border-amber-200 shadow-lg transition-shadow hover:shadow-xl">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-amber-100 p-3">
-                  <Utensils className="h-6 w-6 text-amber-600" />
+          {!isCleaner && (
+            <Card className="border-2 border-amber-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-amber-100 p-3">
+                    <Utensils className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Cardápio</CardTitle>
+                    <CardDescription>Gerenciar cardápio do dia</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Cardápio</CardTitle>
-                  <CardDescription>Gerenciar cardápio do dia</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
-                <Link href="/dashboard/menu">
-                  <Utensils className="mr-2 h-4 w-4" />
-                  Ver Cardápio
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
+                  <Link href="/dashboard/menu">
+                    <Utensils className="mr-2 h-4 w-4" />
+                    Ver Cardápio
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {isAdmin && (
             <Card className="border-2 border-purple-200 shadow-lg transition-shadow hover:shadow-xl">
@@ -249,7 +260,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {inspections && inspections.length > 0 && (
+        {!isCleaner && inspections && inspections.length > 0 && (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>Vistorias Recentes</CardTitle>
