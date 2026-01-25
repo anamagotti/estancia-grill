@@ -42,6 +42,52 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({})
 
+  // Filter checklist sections based on day of week for Cleaning checklist
+  const getFilteredChecklist = (sectorId: string, originalChecklist: typeof SECTORS[0]['checklist']) => {
+    if (sectorId !== "limpeza") return originalChecklist
+
+    // Parse date correctly considering timezone issues, simply taking the day of week from the string
+    // Input date is YYYY-MM-DD
+    const [year, month, day] = inspectionDate.split('-').map(Number)
+    const dateObj = new Date(year, month - 1, day)
+    const dayOfWeek = dateObj.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    // Define items per day indexes (based on order in checklist-data.ts)
+    // 0: Banheiro Clientes, 1: Hall Entrada, 2: Buffet, 3: Alas Escadas (Segunda)
+    // 4: Hall Est, 5: Banheiros Func, 6: Escritórios, 7: Refeitório (Terça)
+    // 8: Estoque Seco, 9: Câmaras Frias, 10: Porta Entrada, 11: Janelas (Quarta)
+    // 12: Playground, 13: Estoque Bebidas, 14: Lixo/Rec/Pulveriza, 15: Manipulação (Quinta)
+    // 16: Estacionamento, 17: Setor Sushi, 18: Churrasqueira, 19: Área Salão (Sexta)
+    // 20: Hall Externo, 21: Quadros, 22: Estroncas (Sábado)
+    // 23: Espelhos, 24: Decorações (Domingo)
+
+    let startIdx = 0
+    let count = 0
+
+    switch (dayOfWeek) {
+      case 1: // Segunda
+        startIdx = 0; count = 4; break;
+      case 2: // Terça
+        startIdx = 4; count = 4; break;
+      case 3: // Quarta
+        startIdx = 8; count = 4; break;
+      case 4: // Quinta
+        startIdx = 12; count = 4; break;
+      case 5: // Sexta
+        startIdx = 16; count = 4; break;
+      case 6: // Sábado
+        startIdx = 20; count = 3; break;
+      case 0: // Domingo
+        startIdx = 23; count = 2; break;
+      default:
+        return originalChecklist
+    }
+
+    // The originalChecklist is an array of ChecklistSection
+    // We want to return only the sections starting from startIdx up to startIdx + count
+    return originalChecklist.slice(startIdx, startIdx + count)
+  }
+
   const handleItemChange = (itemKey: string, field: keyof ItemResponse, value: string) => {
     setResponses((prev) => {
       const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
@@ -273,7 +319,24 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       </Card>
 
       {SECTORS.filter(sector => !defaultSector || sector.id === defaultSector).map((sector) => {
-        const score = calculateSectorScore(sector.id)
+        const filteredChecklist = getFilteredChecklist(sector.id, sector.checklist)
+        // Recalculate score based on filtered items
+        
+        // Helper to calc score for filtered items only
+        let totalPoints = 0
+        let achievedPoints = 0
+        filteredChecklist.forEach((section) => {
+           section.items.forEach((item) => {
+             const key = `${sector.id}-${section.title}-${item.item}`
+             totalPoints += item.points
+             if (responses[key]?.status === "OK") {
+               achievedPoints += item.points
+             }
+           })
+        })
+        const percentage = totalPoints > 0 ? (achievedPoints / totalPoints) * 100 : 0
+        const score = { total: totalPoints, achieved: achievedPoints, percentage }
+
         return (
           <div key={sector.id} className="space-y-6 pt-6 border-t">
             <div className="flex items-center justify-between">
@@ -291,7 +354,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
               </div>
             </div>
 
-            {sector.checklist.map((section, sectionIdx) => (
+            {filteredChecklist.map((section, sectionIdx) => (
               <Card key={sectionIdx}>
                 <CardHeader>
                   <CardTitle>{section.title}</CardTitle>

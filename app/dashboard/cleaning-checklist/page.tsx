@@ -12,8 +12,12 @@ export default async function CleaningChecklistPage() {
     redirect("/auth/login")
   }
 
-  // Buscar franquias disponíveis
-  const { data: franchises } = await supabase.from("franchises").select("*").order("name")
+  // Buscar franquias disponíveis (apenas Bauru)
+  const { data: franchises } = await supabase
+    .from("franchises")
+    .select("*")
+    .ilike("name", "%Bauru%")
+    .order("name")
 
   // Buscar dados do usuário para pegar a franquia padrão
   const { data: userData } = await supabase.from("users").select("franchise_id").eq("id", user.id).single()
