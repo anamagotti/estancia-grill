@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import InspectionForm from "@/components/inspection-form"
 
-export default async function NewInspectionPage() {
+export default async function NewInspectionPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
   const supabase = await createClient()
 
   const {
@@ -11,6 +15,8 @@ export default async function NewInspectionPage() {
   if (!user) {
     redirect("/auth/login")
   }
+
+  const sector = typeof searchParams.sector === "string" ? searchParams.sector : undefined
 
   // Buscar franquias disponíveis
   const { data: franchises } = await supabase.from("franchises").select("*").order("name")
@@ -32,6 +38,7 @@ export default async function NewInspectionPage() {
           userId={user.id}
           franchises={franchises || []}
           defaultFranchiseId={userData?.franchise_id || ""}
+          defaultSector={sector}
         />
       </main>
     </div>
