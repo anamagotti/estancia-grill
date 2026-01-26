@@ -25,8 +25,12 @@ export default async function NewInspectionPage({
 
   const rawSector = searchParams?.sector
   const sector = Array.isArray(rawSector) ? rawSector[0] : rawSector
-
   const admin = await isAdmin()
+
+  // Restringe toda a página a administradores
+  if (!admin) {
+    redirect("/dashboard")
+  }
 
   // Buscar franquias disponíveis
   const { data: franchises } = await supabase.from("franchises").select("*").order("name")
@@ -51,22 +55,8 @@ export default async function NewInspectionPage({
             defaultFranchiseId={userData?.franchise_id || ""}
             defaultSector={sector}
           />
-        ) : admin ? (
-          <AdminApprovals userId={user.id} />
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Iniciar vistoria pelo dashboard</CardTitle>
-              <CardDescription>
-                Acesse o dashboard e clique no card do setor para começar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild variant="secondary">
-                <Link href="/dashboard">Voltar ao dashboard</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <AdminApprovals userId={user.id} />
         )}
       </main>
     </div>

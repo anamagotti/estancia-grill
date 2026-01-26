@@ -239,7 +239,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-700" size="lg">
-                <Link href="/dashboard/inspection/new?sector=garcom">
+                <Link href="/dashboard/inspection/start?sector=garcom">
                   <ConciergeBell className="mr-2 h-4 w-4" />
                   Iniciar
                 </Link>
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full bg-slate-600 hover:bg-slate-700" size="lg">
-                <Link href="/dashboard/inspection/new?sector=balanca">
+                <Link href="/dashboard/inspection/start?sector=balanca">
                   <Scale className="mr-2 h-4 w-4" />
                   Iniciar
                 </Link>
@@ -283,7 +283,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full bg-red-600 hover:bg-red-700" size="lg">
-                <Link href="/dashboard/inspection/new?sector=cozinha">
+                <Link href="/dashboard/inspection/start?sector=cozinha">
                   <CookingPot className="mr-2 h-4 w-4" />
                   Iniciar
                 </Link>
@@ -305,7 +305,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full bg-orange-600 hover:bg-orange-700" size="lg">
-                <Link href="/dashboard/inspection/new?sector=churrasqueira">
+                <Link href="/dashboard/inspection/start?sector=churrasqueira">
                   <Flame className="mr-2 h-4 w-4" />
                   Iniciar
                 </Link>
@@ -327,7 +327,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full bg-gray-600 hover:bg-gray-700" size="lg">
-                <Link href="/dashboard/inspection/new?sector=estacionamento">
+                <Link href="/dashboard/inspection/start?sector=estacionamento">
                   <Car className="mr-2 h-4 w-4" />
                   Iniciar
                 </Link>
@@ -350,7 +350,7 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">
-                  <Link href="/dashboard/inspection/new?sector=preventiva">
+                  <Link href="/dashboard/inspection/start?sector=preventiva">
                     <Wrench className="mr-2 h-4 w-4" />
                     Registrar
                   </Link>
