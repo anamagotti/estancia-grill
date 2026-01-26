@@ -210,11 +210,6 @@ export default function InspectionEditForm({ inspection, items, franchises, user
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sector">Setor</Label>
-              <Input id="sector" value={selectedSector?.name} disabled />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
               <Input id="date" type="date" value={inspectionDate} onChange={(e) => setInspectionDate(e.target.value)} />
             </div>

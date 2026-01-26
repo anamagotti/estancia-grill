@@ -327,22 +327,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sector">Setor</Label>
-              <Select value={sector} onValueChange={setSector} disabled={!!defaultSector}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o setor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SECTORS.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Data *</Label>
+              <Label htmlFor="inspectionDate">Data da Vistoria</Label>
               <Input
                 id="date"
                 type="date"
