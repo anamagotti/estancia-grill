@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -87,6 +87,13 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split("T")[0])
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({})
+
+  // Garante que o setor sempre siga o valor vindo da URL/card
+  useEffect(() => {
+    if (defaultSector && defaultSector !== sector) {
+      setSector(defaultSector)
+    }
+  }, [defaultSector])
 
   // Filter checklist sections based on day of week for Cleaning checklist
   const getFilteredChecklist = (sectorId: string) => {
