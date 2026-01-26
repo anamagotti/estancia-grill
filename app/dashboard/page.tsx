@@ -68,6 +68,8 @@ export default async function DashboardPage() {
             <div className="text-right">
               <p className="text-sm font-medium">{userData?.full_name || user.email}</p>
               <p className="text-xs text-muted-foreground">{userData?.franchises?.name || "Sem franquia"}</p>
+              {/* Debug temporário: mostrar papel detectado */}
+              <p className="text-[11px] text-muted-foreground">Perfil: {role || "supervisor"} {isAdmin ? "(admin)" : ""}</p>
             </div>
             <form action="/api/auth/signout" method="post">
               <Button variant="outline" size="sm" type="submit">
