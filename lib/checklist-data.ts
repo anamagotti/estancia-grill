@@ -333,6 +333,8 @@ export const CHECKLIST_LIMPEZA: ChecklistSection[] = [
     title: "Buffet",
     items: [
       { category: "Buffet", item: "Limpeza e organização dos balcões", points: 4 },
+      { category: "Buffet", item: "Tirar o pó dos móveis e decorações", points: 3 },
+      { category: "Buffet", item: "Limpeza dos vidros e espelhos da área do buffet", points: 3 },
     ],
   },
   {
