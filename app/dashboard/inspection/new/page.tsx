@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import InspectionForm from "@/components/inspection-form"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -37,6 +40,32 @@ export default async function NewInspectionPage({
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {!sector && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Selecione um setor</CardTitle>
+              <CardDescription>Escolha abaixo para iniciar a vistoria.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { id: "limpeza", name: "Limpeza" },
+                  { id: "garcom", name: "Garçom" },
+                  { id: "balanca", name: "Balança" },
+                  { id: "cozinha", name: "Cozinha" },
+                  { id: "preventiva", name: "Manutenção Preventiva" },
+                  { id: "atendimento", name: "Atendimento" },
+                  { id: "chopp", name: "Chopp" },
+                  { id: "medias", name: "Médias" },
+                ].map((s) => (
+                  <Button key={s.id} asChild variant="secondary" className="justify-start">
+                    <Link href={`/dashboard/inspection/new?sector=${s.id}`}>{s.name}</Link>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <InspectionForm
           userId={user.id}
           franchises={franchises || []}

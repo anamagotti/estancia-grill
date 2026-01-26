@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
+import DeleteInspectionButton from "@/components/delete-inspection-button"
 import {
   Plus,
   FileText,
@@ -368,13 +369,15 @@ export default async function DashboardPage() {
             <CardContent>
               <div className="space-y-4">
                 {inspections.map((inspection) => (
-                  <Link key={inspection.id} href={`/dashboard/inspection/${inspection.id}`}>
-                    <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent">
+                  <div key={inspection.id} className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="font-medium">{inspection.sector}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(inspection.inspection_date).toLocaleDateString("pt-BR")}
-                        </p>
+                        <Link href={`/dashboard/inspection/${inspection.id}`} className="block">
+                          <p className="font-medium">{inspection.sector}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(inspection.inspection_date).toLocaleDateString("pt-BR")}
+                          </p>
+                        </Link>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
@@ -392,7 +395,13 @@ export default async function DashboardPage() {
                         />
                       </div>
                     </div>
-                  </Link>
+                    <div className="mt-3 flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/dashboard/inspection/${inspection.id}/edit`}>Editar</Link>
+                      </Button>
+                      <DeleteInspectionButton inspectionId={inspection.id} />
+                    </div>
+                  </div>
                 ))}
               </div>
             </CardContent>
