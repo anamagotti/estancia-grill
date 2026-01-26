@@ -33,7 +33,7 @@ export default async function DashboardPage() {
 
   const currentUser = await getCurrentUser()
   const role = (currentUser?.role || "").toLowerCase()
-  const isAdmin = ["admin", "adm", "administrator"].includes(role)
+  const isAdmin = ["admin", "adm", "administrator", "administrador"].includes(role)
   const isCleaner = role === "limpeza"
 
   // Buscar dados do usuário

@@ -21,7 +21,7 @@ export async function getCurrentUser() {
 export async function isAdmin() {
   const user = await getCurrentUser()
   const role = user?.role || ""
-  return ["admin", "adm", "administrator"].includes(role)
+  return ["admin", "adm", "administrator", "administrador"].includes(role)
 }
 
 export async function requireAdmin() {
