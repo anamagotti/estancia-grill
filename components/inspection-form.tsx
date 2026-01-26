@@ -50,7 +50,6 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     // Input date is YYYY-MM-DD
     const [year, month, day] = inspectionDate.split('-').map(Number)
     const dateObj = new Date(year, month - 1, day)
-    const dateObj = new Date(year, month - 1, day)
     const dayOfWeek = dateObj.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
     // As tarefas obrigatórias (índice 0) são sempre incluídas
