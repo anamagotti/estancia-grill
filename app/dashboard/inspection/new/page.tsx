@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import InspectionForm from "@/components/inspection-form"
 
+export const dynamic = "force-dynamic"
+
 export default async function NewInspectionPage({
   searchParams,
 }: {
@@ -17,6 +19,11 @@ export default async function NewInspectionPage({
   }
 
   const sector = typeof searchParams.sector === "string" ? searchParams.sector : undefined
+
+  // Obrigatório vir de um card com setor definido
+  if (!sector) {
+    redirect("/dashboard")
+  }
 
   // Buscar franquias disponíveis
   const { data: franchises } = await supabase.from("franchises").select("*").order("name")
