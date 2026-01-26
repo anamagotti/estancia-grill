@@ -104,28 +104,10 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     }
   }, [searchParams, sector])
 
-  // Filter checklist sections based on day of week for Cleaning checklist
+  // Cleaning checklist: always show full set of daily tasks
   const getFilteredChecklist = (sectorId: string) => {
     const originalChecklist = getChecklistBySector(sectorId)
-    if (sectorId !== "limpeza") {
-      return originalChecklist
-    }
-
-    // Parse date correctly considering timezone issues, simply taking the day of week from the string
-    // Input date is YYYY-MM-DD
-    const dateObj = new Date(`${inspectionDate}T00:00:00`) // Assume local timezone
-    const dayOfWeek = dateObj.getDay() // 0 (Sunday) to 6 (Saturday)
-
-    return originalChecklist.filter((section) => {
-      // Logic to determine which sections to show based on day of week
-      // This is a placeholder, you need to define the logic based on your spreadsheet
-      // Example:
-      if (dayOfWeek === 1 /* Monday */) {
-        return section.title.includes("Segunda") || section.title.includes("Diário")
-      }
-      // Add other days
-      return true // Default to show all if no specific logic
-    })
+    return originalChecklist
   }
 
   const currentChecklist = sector ? getFilteredChecklist(sector) : []
