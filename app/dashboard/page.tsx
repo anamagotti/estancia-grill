@@ -3,7 +3,21 @@ import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { Plus, FileText, BarChart3, LogOut, Shield, Utensils } from "lucide-react"
+import {
+  Plus,
+  FileText,
+  BarChart3,
+  LogOut,
+  Shield,
+  Utensils,
+  ConciergeBell,
+  Scale,
+  CookingPot,
+  Flame,
+  Car,
+  Wrench,
+  Settings,
+} from "lucide-react"
 import { getCurrentUser } from "@/lib/auth-utils"
 import Image from "next/image"
 
@@ -235,7 +249,162 @@ export default async function DashboardPage() {
             </Card>
           )}
 
-          {isAdmin && (
+          {!isCleaner && (
+            <Card className="border-2 border-cyan-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-cyan-100 p-3">
+                    <ConciergeBell className="h-6 w-6 text-cyan-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Garçom</CardTitle>
+                    <CardDescription>Avaliação de atendimento</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=garcom">
+                    <ConciergeBell className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-slate-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-slate-100 p-3">
+                    <Scale className="h-6 w-6 text-slate-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Balança</CardTitle>
+                    <CardDescription>Aferição e limpeza</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-slate-600 hover:bg-slate-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=balanca">
+                    <Scale className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-red-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-red-100 p-3">
+                    <CookingPot className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Cozinha</CardTitle>
+                    <CardDescription>Processos e higiene</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-red-600 hover:bg-red-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=cozinha">
+                    <CookingPot className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-orange-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-orange-100 p-3">
+                    <Flame className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Churrasqueira</CardTitle>
+                    <CardDescription>Limpeza e preparo</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-orange-600 hover:bg-orange-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=churrasqueira">
+                    <Flame className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-gray-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-gray-100 p-3">
+                    <Car className="h-6 w-6 text-gray-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Estacionamento</CardTitle>
+                    <CardDescription>Organização e segurança</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-gray-600 hover:bg-gray-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=estacionamento">
+                    <Car className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-indigo-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-indigo-100 p-3">
+                    <Wrench className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Preventiva</CardTitle>
+                    <CardDescription>Manutenção de equipamentos</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=preventiva">
+                    <Wrench className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-pink-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-pink-100 p-3">
+                    <Settings className="h-6 w-6 text-pink-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Checklist Manutenção</CardTitle>
+                    <CardDescription>Corretiva e geral</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-pink-600 hover:bg-pink-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=manutencao">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Iniciar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+          {!isCleaner && (
             <Card className="border-2 border-purple-200 shadow-lg transition-shadow hover:shadow-xl">
               <CardHeader>
                 <div className="flex items-center gap-3">
