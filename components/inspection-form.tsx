@@ -348,15 +348,9 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                   <CardDescription>Escolha abaixo um setor para iniciar.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {SECTORS.map((s) => (
-                      <Button key={s.id} asChild variant="secondary" className="justify-start">
-                        <Link href={`/dashboard/inspection/new?sector=${s.id}`}>
-                          {s.name}
-                        </Link>
-                      </Button>
-                    ))}
-                  </div>
+                  <Button asChild variant="secondary">
+                    <Link href="/dashboard">Voltar ao dashboard</Link>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
