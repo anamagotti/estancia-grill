@@ -466,30 +466,32 @@ export const CHECKLIST_LIMPEZA: ChecklistSection[] = [
   },
 ]
 
-export const SECTORS = [
-  { id: "atendimento", name: "Atendimento", checklist: CHECKLIST_ATENDIMENTO },
-  { id: "chopp", name: "Chopp", checklist: CHECKLIST_CHOPP },
-  { id: "cozinha", name: "Cozinha", checklist: CHECKLIST_COZINHA },
-  { id: "limpeza", name: "Limpeza Geral", checklist: CHECKLIST_LIMPEZA },
-  { id: "medias", name: "Médias dos Preparos", checklist: CHECKLIST_MEDIAS },
-] as const
+export const CHECKLIST_GARCOM: ChecklistSection[] = [
+  {
+    title: "Tarefas do Garçom",
+    items: [
+      { category: "Garçom", item: "Limpeza de mesa", points: 5 },
+      { category: "Garçom", item: "Limpeza de saleiro", points: 3 },
+      { category: "Garçom", item: "Limpeza de paliteiro", points: 3 },
+      { category: "Garçom", item: "Conferir saches (ketchup, mostarda, etc.)", points: 4 },
+      { category: "Garçom", item: "Esterilizar talheres e pratos", points: 5 },
+      { category: "Garçom", item: "Conferir alinhamento e estabilidade de mesas e cadeiras", points: 4 },
+      { category: "Garçom", item: "Limpeza e abastecimento do papeleiro", points: 3 },
+    ],
+  },
+]
 
-export function calculateRating(percentage: number): string {
-  if (percentage >= 92.6) return "EXCELENTE"
-  if (percentage >= 72.8) return "BOM"
-  if (percentage >= 22) return "MUITO RUIM"
-  return "PONTUAÇÃO ALCANÇADA"
-}
+export const CHECKLIST_BALANÇA: ChecklistSection[] = [
+  {
+    title: "Tarefas da Balança",
+    items: [
+      { category: "Balança", item: "Limpeza da área de molhos", points: 5 },
+      { category: "Balança", item: "Limpeza dos recipientes de azeite e vinagre", points: 5 },
+      { category: "Balança", item: "Limpeza e organização da bancada do café", points: 4 },
+      { category: "Balança", item: "Limpeza geral da bancada", points: 5 },
+      { category: "Balança", item: "Reposição de talheres na área da balança", points: 4 },
+    ],
+  },
+]
 
-export function getRatingColor(rating: string): string {
-  switch (rating) {
-    case "EXCELENTE":
-      return "bg-green-500"
-    case "BOM":
-      return "bg-blue-500"
-    case "MUITO RUIM":
-      return "bg-red-500"
-    default:
-      return "bg-yellow-500"
-  }
-}
+export const CHECKLIST_PREVENTIVA: ChecklistSection[] = []
