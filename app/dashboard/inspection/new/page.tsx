@@ -18,12 +18,8 @@ export default async function NewInspectionPage({
     redirect("/auth/login")
   }
 
-  const sector = typeof searchParams.sector === "string" ? searchParams.sector : undefined
-
-  // Obrigatório vir de um card com setor definido
-  if (!sector) {
-    redirect("/dashboard")
-  }
+  const rawSector = searchParams?.sector
+  const sector = Array.isArray(rawSector) ? rawSector[0] : rawSector
 
   // Buscar franquias disponíveis
   const { data: franchises } = await supabase.from("franchises").select("*").order("name")
