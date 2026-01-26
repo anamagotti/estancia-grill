@@ -474,7 +474,7 @@ export const CHECKLIST_GARCOM: ChecklistSection[] = [
       { category: "Garçom", item: "Saleiro", points: 3 },
       { category: "Garçom", item: "Paliteiro", points: 3 },
       { category: "Garçom", item: "Conferir saches", points: 4 },
-      { category: "Garçom", item: "Esterilizar talheres e pratos", points: 5 },
+      { category: "Garçom", item: "Esterializar talheres e pratos", points: 5 },
       { category: "Garçom", item: "Conferir mesas e cadeiras", points: 4 },
       { category: "Garçom", item: "Papeleiro", points: 3 },
     ],
