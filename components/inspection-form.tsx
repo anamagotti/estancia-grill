@@ -12,11 +12,56 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
-import { SECTORS, calculateRating, getRatingColor } from "@/lib/checklist-data"
+import {
+  CHECKLIST_ATENDIMENTO,
+  CHECKLIST_BALANÇA,
+  CHECKLIST_CHOPP,
+  CHECKLIST_COZINHA,
+  CHECKLIST_GARCOM,
+  CHECKLIST_LIMPEZA,
+  CHECKLIST_MEDIAS,
+  CHECKLIST_PREVENTIVA,
+  type ChecklistSection,
+} from "@/lib/checklist-data"
+import { calculateRating, getRatingColor } from "@/lib/utils"
 import type { Franchise } from "@/types/inspection"
 import { ArrowLeft, Save, Camera, X } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+
+const SECTORS = [
+  { id: "limpeza", name: "Limpeza" },
+  { id: "garcom", name: "Garçom" },
+  { id: "balanca", name: "Balança" },
+  { id: "cozinha", name: "Cozinha" },
+  { id: "preventiva", name: "Manutenção Preventiva" },
+  { id: "atendimento", name: "Atendimento" },
+  { id: "chopp", name: "Chopp" },
+  { id: "medias", name: "Médias" },
+]
+
+const getChecklistBySector = (sectorId: string): ChecklistSection[] => {
+  switch (sectorId) {
+    case "limpeza":
+      return CHECKLIST_LIMPEZA
+    case "garcom":
+      return CHECKLIST_GARCOM
+    case "balanca":
+      return CHECKLIST_BALANÇA
+    case "cozinha":
+      return CHECKLIST_COZINHA
+    case "preventiva":
+      return CHECKLIST_PREVENTIVA
+    case "atendimento":
+      return CHECKLIST_ATENDIMENTO
+    case "chopp":
+      return CHECKLIST_CHOPP
+    case "medias":
+      return CHECKLIST_MEDIAS
+    default:
+      return []
+  }
+}
 
 type Props = {
   userId: string
@@ -38,67 +83,40 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [franchiseId, setFranchiseId] = useState(defaultFranchiseId)
+  const [sector, setSector] = useState(defaultSector || "limpeza")
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split("T")[0])
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({})
 
   // Filter checklist sections based on day of week for Cleaning checklist
-  const getFilteredChecklist = (sectorId: string, originalChecklist: typeof SECTORS[0]['checklist']) => {
-    if (sectorId !== "limpeza") return originalChecklist
+  const getFilteredChecklist = (sectorId: string) => {
+    const originalChecklist = getChecklistBySector(sectorId)
+    if (sectorId !== "limpeza") {
+      return originalChecklist
+    }
 
     // Parse date correctly considering timezone issues, simply taking the day of week from the string
     // Input date is YYYY-MM-DD
-    const [year, month, day] = inspectionDate.split('-').map(Number)
-    const dateObj = new Date(year, month - 1, day)
-    const dayOfWeek = dateObj.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const dateObj = new Date(`${inspectionDate}T00:00:00`) // Assume local timezone
+    const dayOfWeek = dateObj.getDay() // 0 (Sunday) to 6 (Saturday)
 
-    // As tarefas obrigatórias (índice 0) são sempre incluídas
-    const mandatoryTasks = originalChecklist[0]
-
-    // Mapeamento de dias para índices de seções DIÁRIAS
-    const dailyTasksStartIndex = 1 // As tarefas diárias começam no índice 1
-    const sectionsPerDay = 4 // Quantas seções por dia
-
-    let startIndex = 0
-    let endIndex = 0
-
-    switch (dayOfWeek) {
-      case 1: // Segunda
-        startIndex = dailyTasksStartIndex
-        endIndex = startIndex + sectionsPerDay
-        break
-      case 2: // Terça
-        startIndex = dailyTasksStartIndex + sectionsPerDay
-        endIndex = startIndex + sectionsPerDay
-        break
-      case 3: // Quarta
-        startIndex = dailyTasksStartIndex + sectionsPerDay * 2
-        endIndex = startIndex + sectionsPerDay
-        break
-      case 4: // Quinta
-        startIndex = dailyTasksStartIndex + sectionsPerDay * 3
-        endIndex = startIndex + sectionsPerDay
-        break
-      case 5: // Sexta
-        startIndex = dailyTasksStartIndex + sectionsPerDay * 4
-        endIndex = startIndex + sectionsPerDay
-        break
-      case 6: // Sábado
-        startIndex = dailyTasksStartIndex + sectionsPerDay * 5
-        endIndex = startIndex + sectionsPerDay
-        break
-      case 0: // Domingo
-        // Pega as seções restantes
-        startIndex = dailyTasksStartIndex + sectionsPerDay * 6
-        endIndex = originalChecklist.length
-        break
-      default:
-        return [mandatoryTasks] // Retorna apenas as obrigatórias se o dia for inválido
-    }
-
-    const dailyTasks = originalChecklist.slice(startIndex, endIndex)
-    return [mandatoryTasks, ...dailyTasks]
+    return originalChecklist.filter((section) => {
+      // Logic to determine which sections to show based on day of week
+      // This is a placeholder, you need to define the logic based on your spreadsheet
+      // Example:
+      if (dayOfWeek === 1 /* Monday */) {
+        return section.title.includes("Segunda") || section.title.includes("Diário")
+      }
+      // Add other days
+      return true // Default to show all if no specific logic
+    })
   }
+
+  const currentChecklist = getFilteredChecklist(sector)
+  const totalPoints = currentChecklist.reduce(
+    (acc, section) => acc + section.items.reduce((itemAcc, item) => itemAcc + item.points, 0),
+    0,
+  )
 
   const handleItemChange = (itemKey: string, field: keyof ItemResponse, value: string) => {
     setResponses((prev) => {
@@ -295,9 +313,9 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="franchise">Franquia *</Label>
-              <Select value={franchiseId} onValueChange={setFranchiseId} required>
-                <SelectTrigger id="franchise">
-                  <SelectValue placeholder="Selecione a franquia" />
+              <Select value={franchiseId} onValueChange={setFranchiseId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a unidade" />
                 </SelectTrigger>
                 <SelectContent>
                   {franchises.map((f) => (
@@ -308,14 +326,21 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
-              <Label>Avaliador</Label>
-              <div className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
-                Robson Alexandre
-              </div>
+              <Label htmlFor="sector">Setor</Label>
+              <Select value={sector} onValueChange={setSector} disabled={!!defaultSector}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o setor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SECTORS.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="date">Data *</Label>
               <Input
@@ -331,7 +356,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       </Card>
 
       {SECTORS.filter(sector => !defaultSector || sector.id === defaultSector).map((sector) => {
-        const filteredChecklist = getFilteredChecklist(sector.id, sector.checklist)
+        const filteredChecklist = getFilteredChecklist(sector.id)
         // Recalculate score based on filtered items
         
         // Helper to calc score for filtered items only

@@ -12,10 +12,44 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
-import { SECTORS, calculateRating } from "@/lib/checklist-data"
+import {
+  CHECKLIST_ATENDIMENTO,
+  CHECKLIST_BALANÇA,
+  CHECKLIST_CHOPP,
+  CHECKLIST_COZINHA,
+  CHECKLIST_GARCOM,
+  CHECKLIST_LIMPEZA,
+  CHECKLIST_MEDIAS,
+  CHECKLIST_PREVENTIVA,
+  type ChecklistSection,
+} from "@/lib/checklist-data"
+import { calculateRating } from "@/lib/utils"
 import type { Franchise } from "@/types/inspection"
 import { ArrowLeft, Save } from "lucide-react"
 import Link from "next/link"
+
+const getChecklistBySector = (sectorId: string): ChecklistSection[] => {
+  switch (sectorId) {
+    case "limpeza":
+      return CHECKLIST_LIMPEZA
+    case "garcom":
+      return CHECKLIST_GARCOM
+    case "balanca":
+      return CHECKLIST_BALANÇA
+    case "cozinha":
+      return CHECKLIST_COZINHA
+    case "preventiva":
+      return CHECKLIST_PREVENTIVA
+    case "atendimento":
+      return CHECKLIST_ATENDIMENTO
+    case "chopp":
+      return CHECKLIST_CHOPP
+    case "medias":
+      return CHECKLIST_MEDIAS
+    default:
+      return []
+  }
+}
 
 type Props = {
   inspection: {
@@ -49,10 +83,8 @@ export default function InspectionEditForm({ inspection, items, franchises, user
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [franchiseId, setFranchiseId] = useState(inspection.franchise_id)
-  const [inspectionDate, setInspectionDate] = useState(inspection.inspection_date)
-  const [responses, setResponses] = useState<Record<string, ItemResponse>>(
-    items.reduce(
+  const [currentResponses, setCurrentResponses] = useState<Record<string, ItemResponse>>(() => {
+    return items.reduce(
       (acc, item) => {
         acc[item.id] = {
           id: item.id,
@@ -63,13 +95,13 @@ export default function InspectionEditForm({ inspection, items, franchises, user
         return acc
       },
       {} as Record<string, ItemResponse>,
-    ),
-  )
+    )
+  })
 
-  const selectedSector = SECTORS.find((s) => s.id === inspection.sector)
+  const currentChecklist = getChecklistBySector(inspection.sector)
 
   const handleItemChange = (itemId: string, field: keyof Omit<ItemResponse, "id">, value: string) => {
-    setResponses((prev) => ({
+    setCurrentResponses((prev) => ({
       ...prev,
       [itemId]: {
         ...prev[itemId],
@@ -79,14 +111,12 @@ export default function InspectionEditForm({ inspection, items, franchises, user
   }
 
   const calculateScore = () => {
-    if (!selectedSector) return { total: 0, achieved: 0, percentage: 0 }
-
     let totalPoints = 0
     let achievedPoints = 0
 
     items.forEach((item) => {
       totalPoints += item.points
-      if (responses[item.id]?.status === "OK") {
+      if (currentResponses[item.id]?.status === "OK") {
         achievedPoints += item.points
       }
     })
@@ -121,7 +151,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
       if (!inspectionResponse.ok) throw new Error("Erro ao atualizar vistoria")
 
       // Atualizar os itens
-      const updatePromises = Object.values(responses).map((response) =>
+      const updatePromises = Object.values(currentResponses).map((response) =>
         fetch(`/api/checklist-items/${response.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -238,7 +268,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
               </CardHeader>
               <CardContent className="space-y-6">
                 {categoryItems.map((item) => {
-                  const response = responses[item.id]
+                  const response = currentResponses[item.id]
 
                   return (
                     <div key={item.id} className="space-y-3 rounded-lg border p-4">

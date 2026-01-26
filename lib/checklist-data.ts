@@ -494,4 +494,15 @@ export const CHECKLIST_BALANÇA: ChecklistSection[] = [
   },
 ]
 
-export const CHECKLIST_PREVENTIVA: ChecklistSection[] = []
+export const CHECKLIST_PREVENTIVA: ChecklistSection[] = [
+  {
+    title: "Registro de Manutenção Preventiva",
+    items: [
+      {
+        category: "Manutenção Preventiva",
+        item: "Descrever o problema encontrado e anexar fotos para documentação.",
+        points: 1,
+      },
+    ],
+  },
+]

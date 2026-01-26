@@ -287,27 +287,29 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-indigo-200 shadow-lg transition-shadow hover:shadow-xl">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-indigo-100 p-3">
-                  <Wrench className="h-6 w-6 text-indigo-600" />
+          {isAdmin && (
+            <Card className="border-2 border-indigo-200 shadow-lg transition-shadow hover:shadow-xl">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-indigo-100 p-3">
+                    <Wrench className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Manutenção Preventiva</CardTitle>
+                    <CardDescription>Registrar um problema</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Manutenção Preventiva</CardTitle>
-                  <CardDescription>Manutenção de equipamentos</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">
-                <Link href="/dashboard/inspection/new?sector=preventiva">
-                  <Wrench className="mr-2 h-4 w-4" />
-                  Iniciar
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">
+                  <Link href="/dashboard/inspection/new?sector=preventiva">
+                    <Wrench className="mr-2 h-4 w-4" />
+                    Registrar
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {!isCleaner && inspections && inspections.length > 0 && (
