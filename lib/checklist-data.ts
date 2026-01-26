@@ -471,12 +471,12 @@ export const CHECKLIST_GARCOM: ChecklistSection[] = [
     title: "Tarefas do Garçom",
     items: [
       { category: "Garçom", item: "Limpeza de mesa", points: 5 },
-      { category: "Garçom", item: "Limpeza de saleiro", points: 3 },
-      { category: "Garçom", item: "Limpeza de paliteiro", points: 3 },
-      { category: "Garçom", item: "Conferir saches (ketchup, mostarda, etc.)", points: 4 },
+      { category: "Garçom", item: "Saleiro", points: 3 },
+      { category: "Garçom", item: "Paliteiro", points: 3 },
+      { category: "Garçom", item: "Conferir saches", points: 4 },
       { category: "Garçom", item: "Esterilizar talheres e pratos", points: 5 },
-      { category: "Garçom", item: "Conferir alinhamento e estabilidade de mesas e cadeiras", points: 4 },
-      { category: "Garçom", item: "Limpeza e abastecimento do papeleiro", points: 3 },
+      { category: "Garçom", item: "Conferir mesas e cadeiras", points: 4 },
+      { category: "Garçom", item: "Papeleiro", points: 3 },
     ],
   },
 ]
@@ -485,11 +485,12 @@ export const CHECKLIST_BALANÇA: ChecklistSection[] = [
   {
     title: "Tarefas da Balança",
     items: [
-      { category: "Balança", item: "Limpeza da área de molhos", points: 5 },
-      { category: "Balança", item: "Limpeza dos recipientes de azeite e vinagre", points: 5 },
-      { category: "Balança", item: "Limpeza e organização da bancada do café", points: 4 },
-      { category: "Balança", item: "Limpeza geral da bancada", points: 5 },
-      { category: "Balança", item: "Reposição de talheres na área da balança", points: 4 },
+      { category: "Balança", item: "Limpeza dos molhos", points: 5 },
+      { category: "Balança", item: "Azeite", points: 5 },
+      { category: "Balança", item: "Vinagre", points: 5 },
+      { category: "Balança", item: "Café", points: 4 },
+      { category: "Balança", item: "Bancada", points: 5 },
+      { category: "Balança", item: "Reposição de talher", points: 4 },
     ],
   },
 ]
