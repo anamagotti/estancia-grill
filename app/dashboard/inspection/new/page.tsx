@@ -4,6 +4,8 @@ import InspectionForm from "@/components/inspection-form"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { isAdmin } from "@/lib/auth-utils"
+import ApproveButton from "@/components/approve-button"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +26,8 @@ export default async function NewInspectionPage({
   const rawSector = searchParams?.sector
   const sector = Array.isArray(rawSector) ? rawSector[0] : rawSector
 
+  const admin = await isAdmin()
+
   // Buscar franquias disponíveis
   const { data: franchises } = await supabase.from("franchises").select("*").order("name")
 
@@ -40,39 +44,77 @@ export default async function NewInspectionPage({
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {!sector && (
-          <Card className="mb-6">
+        {sector ? (
+          <InspectionForm
+            userId={user.id}
+            franchises={franchises || []}
+            defaultFranchiseId={userData?.franchise_id || ""}
+            defaultSector={sector}
+          />
+        ) : admin ? (
+          <AdminApprovals userId={user.id} />
+        ) : (
+          <Card>
             <CardHeader>
-              <CardTitle>Selecione um setor</CardTitle>
-              <CardDescription>Escolha abaixo para iniciar a vistoria.</CardDescription>
+              <CardTitle>Iniciar vistoria pelo dashboard</CardTitle>
+              <CardDescription>
+                Acesse o dashboard e clique no card do setor para começar.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { id: "limpeza", name: "Limpeza" },
-                  { id: "garcom", name: "Garçom" },
-                  { id: "balanca", name: "Balança" },
-                  { id: "cozinha", name: "Cozinha" },
-                  { id: "preventiva", name: "Manutenção Preventiva" },
-                  { id: "atendimento", name: "Atendimento" },
-                  { id: "chopp", name: "Chopp" },
-                  { id: "medias", name: "Médias" },
-                ].map((s) => (
-                  <Button key={s.id} asChild variant="secondary" className="justify-start">
-                    <Link href={`/dashboard/inspection/new?sector=${s.id}`}>{s.name}</Link>
-                  </Button>
-                ))}
-              </div>
+              <Button asChild variant="secondary">
+                <Link href="/dashboard">Voltar ao dashboard</Link>
+              </Button>
             </CardContent>
           </Card>
         )}
-        <InspectionForm
-          userId={user.id}
-          franchises={franchises || []}
-          defaultFranchiseId={userData?.franchise_id || ""}
-          defaultSector={sector}
-        />
       </main>
+    </div>
+  )
+}
+
+async function AdminApprovals({ userId }: { userId: string }) {
+  const supabase = await createClient()
+
+  const { data: pending } = await supabase
+    .from("inspections")
+    .select("id, sector, inspection_date, percentage, rating, franchises(name)")
+    .eq("approval_status", "pending")
+    .order("inspection_date", { ascending: false })
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Aprovação de Vistorias</CardTitle>
+          <CardDescription>Revise e aprove/reprove as vistorias feitas.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!pending || pending.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma vistoria pendente no momento.</p>
+          ) : (
+            <div className="space-y-3">
+              {pending.map((v: any) => (
+                <div key={v.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="font-medium">{v.franchises?.name || "Unidade"} • {v.sector}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(v.inspection_date).toLocaleDateString()} • {v.percentage?.toFixed?.(1)}% • {v.rating}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <ApproveButton id={v.id} userId={userId} action="approved" />
+                    <ApproveButton id={v.id} userId={userId} action="rejected" />
+                    <Button asChild variant="outline">
+                      <Link href={`/dashboard/inspection/${v.id}`}>Ver detalhes</Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

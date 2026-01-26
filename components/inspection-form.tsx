@@ -233,6 +233,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
           points_achieved: score.achieved,
           percentage: score.percentage,
           rating,
+          approval_status: "pending",
         }),
       })
 
