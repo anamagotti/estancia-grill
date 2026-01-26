@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -79,6 +79,7 @@ type ItemResponse = {
 
 export default function InspectionForm({ userId, franchises, defaultFranchiseId, defaultSector }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -94,6 +95,14 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       setSector(defaultSector)
     }
   }, [defaultSector])
+
+  // Client-side fallback: read sector from URL if not provided by server
+  useEffect(() => {
+    if (!sector) {
+      const param = searchParams.get("sector")
+      if (param) setSector(param)
+    }
+  }, [searchParams, sector])
 
   // Filter checklist sections based on day of week for Cleaning checklist
   const getFilteredChecklist = (sectorId: string) => {
