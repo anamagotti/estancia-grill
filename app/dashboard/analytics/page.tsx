@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { isAdmin } from "@/lib/auth-utils"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,6 +18,11 @@ export default async function AnalyticsPage() {
   } = await supabase.auth.getUser()
   if (!user) {
     redirect("/auth/login")
+  }
+
+  const admin = await isAdmin()
+  if (!admin) {
+    redirect("/dashboard")
   }
 
   // Buscar todas as vistorias

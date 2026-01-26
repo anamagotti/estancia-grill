@@ -133,7 +133,7 @@ export default async function DashboardPage() {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {(!isCleaner || isAdmin) && (
+          {isAdmin && (
             <>
               <Card className="border-2 border-orange-200 shadow-lg transition-shadow hover:shadow-xl">
                 <CardHeader>
