@@ -403,76 +403,87 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                           </RadioGroup>
                         </div>
 
-                        {response.status === "NO" && (
-                          <div className="space-y-3">
-                            <div className="grid gap-3 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label htmlFor={`${key}-obs`} className="text-sm">
-                                  Observação
-                                </Label>
-                                <Textarea
-                                  id={`${key}-obs`}
-                                  value={response.observation}
-                                  onChange={(e) => handleItemChange(key, "observation", e.target.value)}
-                                  placeholder="Descreva o problema..."
-                                  rows={2}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor={`${key}-resp`} className="text-sm">
-                                  Responsável
-                                </Label>
-                                <Input
-                                  id={`${key}-resp`}
-                                  value={response.responsible}
-                                  onChange={(e) => handleItemChange(key, "responsible", e.target.value)}
-                                  placeholder="Nome do responsável"
-                                />
-                              </div>
-                            </div>
-
+                        <div className="space-y-3">
+                          <div className="grid gap-3 md:grid-cols-2">
                             <div className="space-y-2">
-                              <Label className="text-sm">Fotos ({response.photoUrls.length})</Label>
-                              <div className="flex flex-wrap gap-2">
-                                {response.photoUrls.map((photoUrl, photoIdx) => (
-                                  <div key={photoIdx} className="relative h-24 w-24 rounded-lg border">
-                                    <Image
-                                      src={photoUrl || "/placeholder.svg"}
-                                      alt={`Foto ${photoIdx + 1}`}
-                                      fill
-                                      className="rounded-lg object-cover"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="destructive"
-                                      size="icon"
-                                      className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                                      onClick={() => handlePhotoRemove(key, photoIdx)}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                ))}
-                                <label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0]
-                                      if (file) handlePhotoAdd(key, file)
-                                    }}
-                                    disabled={uploadingPhotos[key]}
-                                  />
-                                  <Camera className="h-6 w-6 text-muted-foreground" />
-                                </label>
-                              </div>
-                              {uploadingPhotos[key] && (
-                                <p className="text-sm text-muted-foreground">Adicionando foto...</p>
-                              )}
+                              <Label htmlFor={`${key}-obs`} className="text-sm">
+                                Observação *
+                              </Label>
+                              <Textarea
+                                id={`${key}-obs`}
+                                value={response.observation}
+                                onChange={(e) => handleItemChange(key, "observation", e.target.value)}
+                                placeholder="Descreva a situação..."
+                                rows={2}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`${key}-resp`} className="text-sm">
+                                Responsável
+                              </Label>
+                              <Input
+                                id={`${key}-resp`}
+                                value={response.responsible}
+                                onChange={(e) => handleItemChange(key, "responsible", e.target.value)}
+                                placeholder="Nome do responsável"
+                              />
                             </div>
                           </div>
-                        )}
+
+                          <div className="space-y-2">
+                            <Label className="text-sm">
+                              Fotos *
+                            </Label>
+                            <div className="flex flex-wrap gap-2">
+                              {response.photoUrls.map((photoUrl, photoIdx) => (
+                                <div key={photoIdx} className="relative h-24 w-24 rounded-lg border">
+                                  <Image
+                                    src={photoUrl || "/placeholder.svg"}
+                                    alt={`Foto ${photoIdx + 1}`}
+                                    fill
+                                    className="rounded-lg object-cover"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                    onClick={() => handlePhotoRemove(key, photoIdx)}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) handlePhotoAdd(key, file)
+                                  }}
+                                  disabled={uploadingPhotos[key]}
+                                />
+                                <Camera className="h-6 w-6 text-muted-foreground" />
+                              </label>
+                            </div>
+                            {uploadingPhotos[key] && (
+                              <p className="text-sm text-muted-foreground">Adicionando foto...</p>
+                            )}
+                            {response.photoUrls.length === 0 && (
+                              <p className="text-sm text-destructive">
+                                É obrigatório adicionar pelo menos 1 foto.
+                              </p>
+                            )}
+                             {response.status === "NO" && response.photoUrls.length < 2 && (
+                              <p className="text-sm text-destructive">
+                                Para status "NO", adicione pelo menos 2 fotos (antes e depois).
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )
                   })}
