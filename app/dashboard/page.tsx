@@ -131,7 +131,75 @@ export default async function DashboardPage() {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Removido o card genérico de "Nova Vistoria" para evitar abertura sem setor */}
+          {isAdmin && (
+            <>
+              <Card className="border-2 border-orange-200 shadow-lg transition-shadow hover:shadow-xl">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-orange-100 p-3">
+                      <Plus className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <CardTitle>Nova Vistoria</CardTitle>
+                      <CardDescription>Criar uma nova vistoria</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full" size="lg">
+                    <Link href="/dashboard/inspection/new">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Iniciar Vistoria
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-200 shadow-lg transition-shadow hover:shadow-xl">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-amber-100 p-3">
+                      <Utensils className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <CardTitle>Cardápio</CardTitle>
+                      <CardDescription>Gerenciar e exportar o cardápio</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full bg-amber-600 hover:bg-amber-700" size="lg">
+                    <Link href="/dashboard/menu">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Abrir Cardápio
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-blue-200 shadow-lg transition-shadow hover:shadow-xl">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-blue-100 p-3">
+                      <BarChart3 className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle>Análise de Vistorias</CardTitle>
+                      <CardDescription>Indicadores e desempenho</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+                    <Link href="/dashboard/analytics">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Abrir Análise
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           <Card className="border-2 border-green-200 shadow-lg transition-shadow hover:shadow-xl">
             <CardHeader>
