@@ -83,7 +83,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [franchiseId, setFranchiseId] = useState(defaultFranchiseId)
-  const [sector, setSector] = useState(defaultSector || "limpeza")
+  const [sector, setSector] = useState(defaultSector || "atendimento") // Prioriza o setor da URL
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split("T")[0])
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({})
