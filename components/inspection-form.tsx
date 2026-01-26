@@ -191,17 +191,14 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   }
 
   const calculateSectorScore = (sectorId: string) => {
-    const sectorData = SECTORS.find((s) => s.id === sectorId)
-    if (!sectorData) return { total: 0, achieved: 0, percentage: 0 }
-
+    const checklist = getFilteredChecklist(sectorId)
     let totalPoints = 0
     let achievedPoints = 0
 
-    sectorData.checklist.forEach((section) => {
+    checklist.forEach((section) => {
       section.items.forEach((item) => {
         const key = `${sectorId}-${section.title}-${item.item}`
         totalPoints += item.points
-
         if (responses[key]?.status === "OK") {
           achievedPoints += item.points
         }
@@ -209,7 +206,6 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     })
 
     const percentage = totalPoints > 0 ? (achievedPoints / totalPoints) * 100 : 0
-
     return { total: totalPoints, achieved: achievedPoints, percentage }
   }
 
@@ -228,69 +224,63 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     setIsSubmitting(true)
 
     try {
-      // Submit one inspection per sector
-      const promises = SECTORS.map(async (sector) => {
-        const score = calculateSectorScore(sector.id)
-        const rating = calculateRating(score.percentage)
+      // Submit inspection only for selected sector
+      const activeSectorId = sector
+      const sectorInfo = SECTORS.find((s) => s.id === activeSectorId)
+      const score = calculateSectorScore(activeSectorId)
+      const rating = calculateRating(score.percentage)
 
-        // Create inspection
-        const inspectionResponse = await fetch("/api/inspections", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            franchise_id: franchiseId,
-            inspector_id: userId,
-            inspection_date: inspectionDate,
-            sector: sector.id,
-            total_points: score.total,
-            points_achieved: score.achieved,
-            percentage: score.percentage,
-            rating,
-          }),
-        })
-
-        if (!inspectionResponse.ok) {
-          const errorData = await inspectionResponse.json()
-          throw new Error(errorData.error || `Erro ao criar vistoria para ${sector.name}`)
-        }
-
-        const { data: inspection } = await inspectionResponse.json()
-
-        // Create checklist items
-        const items = sector.checklist.flatMap((section) =>
-          section.items.map((item) => {
-            const key = `${sector.id}-${section.title}-${item.item}`
-            const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
-
-            return {
-              inspection_id: inspection.id,
-              category: section.title,
-              item_name: item.item,
-              status: response.status,
-              points: item.points,
-              observation: response.observation,
-              responsible: response.responsible,
-              photo_url: response.photoUrls[0] || null,
-              photos: response.photoUrls,
-            }
-          }),
-        )
-
-        const itemsResponse = await fetch("/api/checklist-items", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items }),
-        })
-
-        if (!itemsResponse.ok) {
-          const errorData = await itemsResponse.json()
-          throw new Error(errorData.error || `Erro ao salvar itens para ${sector.name}`)
-        }
-        
-        return inspection
+      const inspectionResponse = await fetch("/api/inspections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          franchise_id: franchiseId,
+          inspector_id: userId,
+          inspection_date: inspectionDate,
+          sector: activeSectorId,
+          total_points: score.total,
+          points_achieved: score.achieved,
+          percentage: score.percentage,
+          rating,
+        }),
       })
 
-      await Promise.all(promises)
+      if (!inspectionResponse.ok) {
+        const errorData = await inspectionResponse.json()
+        throw new Error(errorData.error || `Erro ao criar vistoria para ${sectorInfo?.name || activeSectorId}`)
+      }
+
+      const { data: inspection } = await inspectionResponse.json()
+
+      const filteredChecklist = getFilteredChecklist(activeSectorId)
+      const items = filteredChecklist.flatMap((section) =>
+        section.items.map((item) => {
+          const key = `${activeSectorId}-${section.title}-${item.item}`
+          const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
+          return {
+            inspection_id: inspection.id,
+            category: section.title,
+            item_name: item.item,
+            status: response.status,
+            points: item.points,
+            observation: response.observation,
+            responsible: response.responsible,
+            photo_url: response.photoUrls[0] || null,
+            photos: response.photoUrls,
+          }
+        }),
+      )
+
+      const itemsResponse = await fetch("/api/checklist-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      })
+
+      if (!itemsResponse.ok) {
+        const errorData = await itemsResponse.json()
+        throw new Error(errorData.error || `Erro ao salvar itens para ${sectorInfo?.name || activeSectorId}`)
+      }
 
       toast({
         title: "Sucesso!",
@@ -347,29 +337,16 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
         </CardContent>
       </Card>
 
-      {SECTORS.filter(sector => !defaultSector || sector.id === defaultSector).map((sector) => {
-        const filteredChecklist = getFilteredChecklist(sector.id)
-        // Recalculate score based on filtered items
-        
-        // Helper to calc score for filtered items only
-        let totalPoints = 0
-        let achievedPoints = 0
-        filteredChecklist.forEach((section) => {
-           section.items.forEach((item) => {
-             const key = `${sector.id}-${section.title}-${item.item}`
-             totalPoints += item.points
-             if (responses[key]?.status === "OK") {
-               achievedPoints += item.points
-             }
-           })
-        })
-        const percentage = totalPoints > 0 ? (achievedPoints / totalPoints) * 100 : 0
-        const score = { total: totalPoints, achieved: achievedPoints, percentage }
+      {(() => {
+        const activeSectorId = sector
+        const sectorInfo = SECTORS.find((s) => s.id === activeSectorId)
+        const filteredChecklist = getFilteredChecklist(activeSectorId)
+        const score = calculateSectorScore(activeSectorId)
 
         return (
-          <div key={sector.id} className="space-y-6 pt-6 border-t">
+          <div className="space-y-6 pt-6 border-t">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight">{sector.name}</h2>
+              <h2 className="text-2xl font-bold tracking-tight">{sectorInfo?.name || activeSectorId}</h2>
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm text-muted-foreground">Pontuação</p>
@@ -390,7 +367,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {section.items.map((item, itemIdx) => {
-                    const key = `${sector.id}-${section.title}-${item.item}`
+                    const key = `${activeSectorId}-${section.title}-${item.item}`
                     const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
 
                     return (
@@ -507,7 +484,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
             ))}
           </div>
         )
-      })}
+      })()}
 
       <div className="flex gap-4">
         <Button type="button" variant="outline" asChild>
