@@ -19,7 +19,7 @@ import {
   Wrench,
   Settings,
 } from "lucide-react"
-import { getCurrentUser } from "@/lib/auth-utils"
+import { getCurrentUser, isAdmin as isAdminCheck } from "@/lib/auth-utils"
 import Image from "next/image"
 
 export default async function DashboardPage() {
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
   const currentUser = await getCurrentUser()
   const role = (currentUser?.role || "").toLowerCase()
-  const isAdmin = ["admin", "adm", "administrator", "administrador"].includes(role)
+  const isAdmin = await isAdminCheck()
   const isCleaner = role === "limpeza"
 
   // Buscar dados do usuário
