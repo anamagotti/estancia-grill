@@ -32,8 +32,9 @@ export default async function DashboardPage() {
   }
 
   const currentUser = await getCurrentUser()
-  const isAdmin = currentUser?.role === "admin"
-  const isCleaner = currentUser?.role === "limpeza"
+  const role = (currentUser?.role || "").toLowerCase()
+  const isAdmin = ["admin", "adm", "administrator"].includes(role)
+  const isCleaner = role === "limpeza"
 
   // Buscar dados do usuário
   const { data: userData } = await supabase.from("users").select("*, franchises(*)").eq("id", user.id).single()

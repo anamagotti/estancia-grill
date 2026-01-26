@@ -12,7 +12,7 @@ export async function getCurrentUser() {
 
   return {
     ...user,
-    role: userProfile?.role || "supervisor",
+    role: (userProfile?.role || "supervisor").toString().toLowerCase(),
     franchise_id: userProfile?.franchise_id,
     full_name: userProfile?.full_name,
   }
@@ -20,7 +20,8 @@ export async function getCurrentUser() {
 
 export async function isAdmin() {
   const user = await getCurrentUser()
-  return user?.role === "admin"
+  const role = user?.role || ""
+  return ["admin", "adm", "administrator"].includes(role)
 }
 
 export async function requireAdmin() {
