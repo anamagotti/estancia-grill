@@ -472,14 +472,12 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                             {uploadingPhotos[key] && (
                               <p className="text-sm text-muted-foreground">Adicionando foto...</p>
                             )}
-                            {response.photoUrls.length === 0 && (
-                              <p className="text-sm text-destructive">
-                                É obrigatório adicionar pelo menos 1 foto.
-                              </p>
+                            {response.status === "OK" && response.photoUrls.length === 0 && (
+                              <p className="text-sm text-destructive">É obrigatório adicionar pelo menos 1 foto.</p>
                             )}
-                             {response.status === "NO" && response.photoUrls.length < 2 && (
+                            {response.status === "NO" && response.photoUrls.length < 2 && (
                               <p className="text-sm text-destructive">
-                                Para status "NO", adicione pelo menos 2 fotos (antes e depois).
+                                Para status "NO", é obrigatório adicionar pelo menos 2 fotos (antes e depois).
                               </p>
                             )}
                           </div>
