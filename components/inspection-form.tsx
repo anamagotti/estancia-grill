@@ -83,7 +83,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [franchiseId, setFranchiseId] = useState(defaultFranchiseId)
-  const [sector, setSector] = useState(defaultSector || "atendimento") // Prioriza o setor da URL
+  const [sector, setSector] = useState(defaultSector || "") // Prioriza o setor da URL; vazio quando não há setor
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split("T")[0])
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({})
@@ -119,7 +119,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     })
   }
 
-  const currentChecklist = getFilteredChecklist(sector)
+  const currentChecklist = sector ? getFilteredChecklist(sector) : []
   const totalPoints = currentChecklist.reduce(
     (acc, section) => acc + section.items.reduce((itemAcc, item) => itemAcc + item.points, 0),
     0,
@@ -339,6 +339,18 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
 
       {(() => {
         const activeSectorId = sector
+        if (!activeSectorId) {
+          return (
+            <div className="space-y-6 pt-6 border-t">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Selecione um setor</CardTitle>
+                  <CardDescription>Volte ao dashboard e escolha um card de setor.</CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
+          )
+        }
         const sectorInfo = SECTORS.find((s) => s.id === activeSectorId)
         const filteredChecklist = getFilteredChecklist(activeSectorId)
         const score = calculateSectorScore(activeSectorId)

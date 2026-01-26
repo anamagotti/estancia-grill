@@ -131,29 +131,7 @@ export default async function DashboardPage() {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {!isCleaner && (
-            <Card className="border-2 border-orange-200 shadow-lg transition-shadow hover:shadow-xl">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-orange-100 p-3">
-                    <Plus className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <div>
-                    <CardTitle>Nova Vistoria</CardTitle>
-                    <CardDescription>Criar uma nova vistoria</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full" size="lg">
-                  <Link href="/dashboard/inspection/new">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Iniciar Vistoria
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {/* Removido o card genérico de "Nova Vistoria" para evitar abertura sem setor */}
 
           <Card className="border-2 border-green-200 shadow-lg transition-shadow hover:shadow-xl">
             <CardHeader>
