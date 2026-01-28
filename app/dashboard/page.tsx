@@ -350,7 +350,7 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">
-                  <Link href="/dashboard/inspection/start?sector=preventiva">
+                  <Link href="/dashboard/inspection/preventiva">
                     <Wrench className="mr-2 h-4 w-4" />
                     Registrar
                   </Link>
