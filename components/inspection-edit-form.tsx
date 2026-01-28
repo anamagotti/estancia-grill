@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,8 +25,9 @@ import {
 } from "@/lib/checklist-data"
 import { calculateRating } from "@/lib/utils"
 import type { Franchise } from "@/types/inspection"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Camera, X } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 const getChecklistBySector = (sectorId: string): ChecklistSection[] => {
   switch (sectorId) {
@@ -82,6 +83,12 @@ export default function InspectionEditForm({ inspection, items, franchises, user
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [franchiseId, setFranchiseId] = useState(inspection.franchise_id)
+  const [inspectionDate, setInspectionDate] = useState(inspection.inspection_date)
+  const selectedSector = inspection.sector
+
+  const [photosByItem, setPhotosByItem] = useState<Record<string, Array<{ id: string; photo_url: string }>>>({})
+  const [uploading, setUploading] = useState<Record<string, boolean>>({})
 
   const [currentResponses, setCurrentResponses] = useState<Record<string, ItemResponse>>(() => {
     return items.reduce(
@@ -126,11 +133,90 @@ export default function InspectionEditForm({ inspection, items, franchises, user
     return { total: totalPoints, achieved: achievedPoints, percentage }
   }
 
+  // Carregar fotos existentes dos itens
+  useEffect(() => {
+    const loadPhotos = async () => {
+      try {
+        const entries = await Promise.all(
+          items.map(async (it) => {
+            const res = await fetch(`/api/checklist-items/${it.id}/photos`)
+            if (!res.ok) return [it.id, [] as Array<{ id: string; photo_url: string }>] as const
+            const { data } = await res.json()
+            return [it.id, data as Array<{ id: string; photo_url: string }>] as const
+          }),
+        )
+        setPhotosByItem(Object.fromEntries(entries))
+      } catch (e) {
+        // ignore silently
+      }
+    }
+    loadPhotos()
+  }, [items])
+
+  const handleAddPhoto = async (itemId: string, file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Erro", description: "Selecione uma imagem", variant: "destructive" })
+      return
+    }
+    setUploading((prev) => ({ ...prev, [itemId]: true }))
+    try {
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64 = reader.result as string
+        const res = await fetch(`/api/checklist-items/${itemId}/photos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photo: base64 }),
+        })
+        if (!res.ok) throw new Error("Falha ao salvar foto")
+        const { data } = await res.json()
+        setPhotosByItem((prev) => ({
+          ...prev,
+          [itemId]: [...(prev[itemId] || []), ...data],
+        }))
+        setUploading((prev) => ({ ...prev, [itemId]: false }))
+      }
+      reader.readAsDataURL(file)
+    } catch (e) {
+      setUploading((prev) => ({ ...prev, [itemId]: false }))
+      toast({ title: "Erro", description: "Erro ao adicionar foto", variant: "destructive" })
+    }
+  }
+
+  const handleRemovePhoto = async (itemId: string, photoId: string) => {
+    try {
+      const res = await fetch(`/api/checklist-items/${itemId}/photos`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoId }),
+      })
+      if (!res.ok) throw new Error()
+      setPhotosByItem((prev) => ({
+        ...prev,
+        [itemId]: (prev[itemId] || []).filter((p) => p.id !== photoId),
+      }))
+    } catch (e) {
+      toast({ title: "Erro", description: "Não foi possível remover a foto", variant: "destructive" })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
+      // Validar quantidade mínima de fotos: NO >= 1, OK >= 2
+      for (const item of items) {
+        const resp = currentResponses[item.id]
+        const photos = photosByItem[item.id] || []
+        if (resp.status === "NO" && photos.length < 1) {
+          throw new Error(`O item "${item.item_name}" requer ao menos 1 foto quando NO.`)
+        }
+        if (resp.status === "OK" && photos.length < 2) {
+          throw new Error(`O item "${item.item_name}" requer 2 fotos (antes e depois) para marcar como OK.`)
+        }
+      }
+
       const score = calculateScore()
       const rating = calculateRating(score.percentage)
 
@@ -243,7 +329,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
         </CardContent>
       </Card>
 
-      {selectedSector && (
+      {
         <>
           {Object.entries(
             items.reduce(
@@ -292,33 +378,70 @@ export default function InspectionEditForm({ inspection, items, franchises, user
                         </RadioGroup>
                       </div>
 
-                      {response.status === "NO" && (
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label htmlFor={`${item.id}-obs`} className="text-sm">
-                              Observação
-                            </Label>
-                            <Textarea
-                              id={`${item.id}-obs`}
-                              value={response.observation}
-                              onChange={(e) => handleItemChange(item.id, "observation", e.target.value)}
-                              placeholder="Descreva o problema..."
-                              rows={2}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`${item.id}-resp`} className="text-sm">
-                              Responsável
-                            </Label>
-                            <Input
-                              id={`${item.id}-resp`}
-                              value={response.responsible}
-                              onChange={(e) => handleItemChange(item.id, "responsible", e.target.value)}
-                              placeholder="Nome do responsável"
-                            />
-                          </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor={`${item.id}-obs`} className="text-sm">
+                            Observação
+                          </Label>
+                          <Textarea
+                            id={`${item.id}-obs`}
+                            value={response.observation}
+                            onChange={(e) => handleItemChange(item.id, "observation", e.target.value)}
+                            placeholder="Descreva o problema..."
+                            rows={2}
+                          />
                         </div>
-                      )}
+                        <div className="space-y-2">
+                          <Label htmlFor={`${item.id}-resp`} className="text-sm">
+                            Responsável
+                          </Label>
+                          <Input
+                            id={`${item.id}-resp`}
+                            value={response.responsible}
+                            onChange={(e) => handleItemChange(item.id, "responsible", e.target.value)}
+                            placeholder="Nome do responsável"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm">Fotos</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {(photosByItem[item.id] || []).map((p) => (
+                            <div key={p.id} className="relative h-24 w-24 rounded-lg border">
+                              <Image src={p.photo_url || "/placeholder.svg"} alt="Foto" fill className="rounded-lg object-cover" />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                onClick={() => handleRemovePhoto(item.id, p.id)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                          <label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) handleAddPhoto(item.id, file)
+                              }}
+                              disabled={!!uploading[item.id]}
+                            />
+                            <Camera className="h-6 w-6 text-muted-foreground" />
+                          </label>
+                        </div>
+                        {response.status === "OK" && (photosByItem[item.id]?.length || 0) < 2 && (
+                          <p className="text-sm text-destructive">Para marcar como OK, adicione 2 fotos (antes e depois).</p>
+                        )}
+                        {response.status === "NO" && (photosByItem[item.id]?.length || 0) < 1 && (
+                          <p className="text-sm text-destructive">Adicione ao menos 1 foto do problema.</p>
+                        )}
+                      </div>
                     </div>
                   )
                 })}
@@ -326,7 +449,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
             </Card>
           ))}
         </>
-      )}
+      }
 
       <div className="flex gap-4">
         <Button type="button" variant="outline" asChild>
