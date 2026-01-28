@@ -105,6 +105,19 @@ async function AdminApprovals({ userId }: { userId: string }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Atalho para iniciar manutenção preventiva direto daqui */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Manutenção Preventiva</CardTitle>
+          <CardDescription>Registre um problema com fotos e descrição.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <Link href="/dashboard/inspection/start?sector=preventiva">Iniciar registro de preventiva</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
