@@ -212,6 +212,31 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       return
     }
 
+    // Validação de fotos por item conforme status
+    try {
+      const activeSectorId = sector
+      const filteredChecklist = getFilteredChecklist(activeSectorId)
+      for (const section of filteredChecklist) {
+        for (const item of section.items) {
+          const key = `${activeSectorId}-${section.title}-${item.item}`
+          const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
+          if (response.status === "NO" && response.photoUrls.length < 1) {
+            throw new Error(`O item "${item.item}" requer ao menos 1 foto quando marcado como NO.`)
+          }
+          if (response.status === "OK" && response.photoUrls.length < 2) {
+            throw new Error(`O item "${item.item}" requer 2 fotos (antes e depois) para marcar como OK.`)
+          }
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Verifique as fotos",
+        description: err instanceof Error ? err.message : "Há itens sem a quantidade mínima de fotos",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -475,13 +500,13 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                             {uploadingPhotos[key] && (
                               <p className="text-sm text-muted-foreground">Adicionando foto...</p>
                             )}
-                            {response.status === "OK" && response.photoUrls.length === 0 && (
-                              <p className="text-sm text-destructive">É obrigatório adicionar pelo menos 1 foto.</p>
-                            )}
-                            {response.status === "NO" && response.photoUrls.length < 2 && (
+                            {response.status === "OK" && response.photoUrls.length < 2 && (
                               <p className="text-sm text-destructive">
-                                Para status "NO", é obrigatório adicionar pelo menos 2 fotos (antes e depois).
+                                Para marcar como "OK", adicione pelo menos 2 fotos (antes e depois).
                               </p>
+                            )}
+                            {response.status === "NO" && response.photoUrls.length < 1 && (
+                              <p className="text-sm text-destructive">Adicione pelo menos 1 foto do problema.</p>
                             )}
                           </div>
                         </div>
