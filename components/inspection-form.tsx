@@ -74,7 +74,8 @@ type ItemResponse = {
   status: "OK" | "NO"
   observation: string
   responsible: string
-  photoUrls: string[]
+  beforePhoto?: string
+  afterPhoto?: string
 }
 
 export default function InspectionForm({ userId, franchises, defaultFranchiseId, defaultSector }: Props) {
@@ -87,7 +88,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const [sector, setSector] = useState(defaultSector || "") // Prioriza o setor da URL; vazio quando não há setor
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split("T")[0])
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
-  const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({})
+  const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, { before?: boolean; after?: boolean }>>({})
 
   // Garante que o setor sempre siga o valor vindo da URL/card
   useEffect(() => {
@@ -118,7 +119,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
 
   const handleItemChange = (itemKey: string, field: keyof ItemResponse, value: string) => {
     setResponses((prev) => {
-      const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
+      const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "" }
       return {
         ...prev,
         [itemKey]: {
@@ -129,7 +130,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
     })
   }
 
-  const handlePhotoAdd = async (itemKey: string, file: File) => {
+  const handlePhotoAdd = async (itemKey: string, which: "before" | "after", file: File) => {
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Erro",
@@ -139,23 +140,24 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       return
     }
 
-    setUploadingPhotos((prev) => ({ ...prev, [itemKey]: true }))
+    setUploadingPhotos((prev) => ({ ...prev, [itemKey]: { ...(prev[itemKey] || {}), [which]: true } }))
 
     try {
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64 = reader.result as string
         setResponses((prev) => {
-          const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
+          const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "" }
           return {
             ...prev,
             [itemKey]: {
               ...existing,
-              photoUrls: [...existing.photoUrls, base64],
+              beforePhoto: which === "before" ? base64 : existing.beforePhoto,
+              afterPhoto: which === "after" ? base64 : existing.afterPhoto,
             },
           }
         })
-        setUploadingPhotos((prev) => ({ ...prev, [itemKey]: false }))
+        setUploadingPhotos((prev) => ({ ...prev, [itemKey]: { ...(prev[itemKey] || {}), [which]: false } }))
       }
       reader.readAsDataURL(file)
     } catch (error) {
@@ -164,18 +166,19 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
         description: "Erro ao adicionar foto",
         variant: "destructive",
       })
-      setUploadingPhotos((prev) => ({ ...prev, [itemKey]: false }))
+      setUploadingPhotos((prev) => ({ ...prev, [itemKey]: { ...(prev[itemKey] || {}), [which]: false } }))
     }
   }
 
-  const handlePhotoRemove = (itemKey: string, photoIndex: number) => {
+  const handlePhotoRemove = (itemKey: string, which: "before" | "after") => {
     setResponses((prev) => {
-      const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
+      const existing = prev[itemKey] || { status: "NO", observation: "", responsible: "" }
       return {
         ...prev,
         [itemKey]: {
           ...existing,
-          photoUrls: existing.photoUrls.filter((_, idx) => idx !== photoIndex),
+          beforePhoto: which === "before" ? undefined : existing.beforePhoto,
+          afterPhoto: which === "after" ? undefined : existing.afterPhoto,
         },
       }
     })
@@ -219,11 +222,11 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       for (const section of filteredChecklist) {
         for (const item of section.items) {
           const key = `${activeSectorId}-${section.title}-${item.item}`
-          const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
-          if (response.status === "NO" && response.photoUrls.length < 1) {
+          const response = responses[key] || { status: "NO", observation: "", responsible: "" }
+          if (response.status === "NO" && !response.beforePhoto) {
             throw new Error(`O item "${item.item}" requer ao menos 1 foto quando marcado como NO.`)
           }
-          if (response.status === "OK" && response.photoUrls.length < 2) {
+          if (response.status === "OK" && (!response.beforePhoto || !response.afterPhoto)) {
             throw new Error(`O item "${item.item}" requer 2 fotos (antes e depois) para marcar como OK.`)
           }
         }
@@ -273,7 +276,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       const items = filteredChecklist.flatMap((section) =>
         section.items.map((item) => {
           const key = `${activeSectorId}-${section.title}-${item.item}`
-          const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrls: [] }
+          const response = responses[key] || { status: "NO", observation: "", responsible: "" }
           return {
             inspection_id: inspection.id,
             category: section.title,
@@ -282,8 +285,11 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
             points: item.points,
             observation: response.observation,
             responsible: response.responsible,
-            photo_url: response.photoUrls[0] || null,
-            photos: response.photoUrls,
+            photo_url: response.beforePhoto || null,
+            photos: [
+              ...(response.beforePhoto ? [{ url: response.beforePhoto, type: "before" }] : []),
+              ...(response.afterPhoto ? [{ url: response.afterPhoto, type: "after" }] : []),
+            ],
           }
         }),
       )
@@ -460,52 +466,121 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-sm">
-                              Fotos *
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {response.photoUrls.map((photoUrl, photoIdx) => (
-                                <div key={photoIdx} className="relative h-24 w-24 rounded-lg border">
-                                  <Image
-                                    src={photoUrl || "/placeholder.svg"}
-                                    alt={`Foto ${photoIdx + 1}`}
-                                    fill
-                                    className="rounded-lg object-cover"
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                                    onClick={() => handlePhotoRemove(key, photoIdx)}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
+                            <Label className="text-sm">Fotos *</Label>
+                            {response.status === "OK" ? (
+                              <div className="flex flex-wrap gap-4">
+                                {/* Antes */}
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Antes</p>
+                                  <div className="relative h-24 w-24 rounded-lg border">
+                                    {response.beforePhoto ? (
+                                      <Image src={response.beforePhoto} alt="Antes" fill className="rounded-lg object-cover" />
+                                    ) : (
+                                      <label className="flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) handlePhotoAdd(key, "before", file)
+                                          }}
+                                          disabled={!!uploadingPhotos[key]?.before}
+                                        />
+                                        <Camera className="h-6 w-6 text-muted-foreground" />
+                                      </label>
+                                    )}
+                                    {response.beforePhoto && (
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                        onClick={() => handlePhotoRemove(key, "before")}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
-                              ))}
-                              <label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0]
-                                    if (file) handlePhotoAdd(key, file)
-                                  }}
-                                  disabled={uploadingPhotos[key]}
-                                />
-                                <Camera className="h-6 w-6 text-muted-foreground" />
-                              </label>
-                            </div>
-                            {uploadingPhotos[key] && (
+
+                                {/* Depois */}
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Depois</p>
+                                  <div className="relative h-24 w-24 rounded-lg border">
+                                    {response.afterPhoto ? (
+                                      <Image src={response.afterPhoto} alt="Depois" fill className="rounded-lg object-cover" />
+                                    ) : (
+                                      <label className="flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) handlePhotoAdd(key, "after", file)
+                                          }}
+                                          disabled={!!uploadingPhotos[key]?.after}
+                                        />
+                                        <Camera className="h-6 w-6 text-muted-foreground" />
+                                      </label>
+                                    )}
+                                    {response.afterPhoto && (
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                        onClick={() => handlePhotoRemove(key, "after")}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Foto do problema</p>
+                                <div className="relative h-24 w-24 rounded-lg border">
+                                  {response.beforePhoto ? (
+                                    <Image src={response.beforePhoto} alt="Problema" fill className="rounded-lg object-cover" />
+                                  ) : (
+                                    <label className="flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0]
+                                          if (file) handlePhotoAdd(key, "before", file)
+                                        }}
+                                        disabled={!!uploadingPhotos[key]?.before}
+                                      />
+                                      <Camera className="h-6 w-6 text-muted-foreground" />
+                                    </label>
+                                  )}
+                                  {response.beforePhoto && (
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                      onClick={() => handlePhotoRemove(key, "before")}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {uploadingPhotos[key]?.before || uploadingPhotos[key]?.after ? (
                               <p className="text-sm text-muted-foreground">Adicionando foto...</p>
+                            ) : null}
+                            {response.status === "OK" && (!response.beforePhoto || !response.afterPhoto) && (
+                              <p className="text-sm text-destructive">Para marcar como "OK", adicione 2 fotos (antes e depois).</p>
                             )}
-                            {response.status === "OK" && response.photoUrls.length < 2 && (
-                              <p className="text-sm text-destructive">
-                                Para marcar como "OK", adicione pelo menos 2 fotos (antes e depois).
-                              </p>
-                            )}
-                            {response.status === "NO" && response.photoUrls.length < 1 && (
+                            {response.status === "NO" && !response.beforePhoto && (
                               <p className="text-sm text-destructive">Adicione pelo menos 1 foto do problema.</p>
                             )}
                           </div>

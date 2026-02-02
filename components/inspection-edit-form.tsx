@@ -87,8 +87,8 @@ export default function InspectionEditForm({ inspection, items, franchises, user
   const [inspectionDate, setInspectionDate] = useState(inspection.inspection_date)
   const selectedSector = inspection.sector
 
-  const [photosByItem, setPhotosByItem] = useState<Record<string, Array<{ id: string; photo_url: string }>>>({})
-  const [uploading, setUploading] = useState<Record<string, boolean>>({})
+  const [photosByItem, setPhotosByItem] = useState<Record<string, { before?: { id: string; photo_url: string }; after?: { id: string; photo_url: string } }>>({})
+  const [uploading, setUploading] = useState<Record<string, { before?: boolean; after?: boolean }>>({})
 
   const [currentResponses, setCurrentResponses] = useState<Record<string, ItemResponse>>(() => {
     return items.reduce(
@@ -140,9 +140,18 @@ export default function InspectionEditForm({ inspection, items, franchises, user
         const entries = await Promise.all(
           items.map(async (it) => {
             const res = await fetch(`/api/checklist-items/${it.id}/photos`)
-            if (!res.ok) return [it.id, [] as Array<{ id: string; photo_url: string }>] as const
+            if (!res.ok) return [it.id, {} as { before?: { id: string; photo_url: string }; after?: { id: string; photo_url: string } }] as const
             const { data } = await res.json()
-            return [it.id, data as Array<{ id: string; photo_url: string }>] as const
+            // Mapear para slots before/after quando possível
+            const mapped = (data as Array<{ id: string; photo_url: string; photo_type?: string }>).
+              reduce((acc, p) => {
+                if (p.photo_type === 'before' && !acc.before) acc.before = { id: p.id, photo_url: p.photo_url }
+                else if (p.photo_type === 'after' && !acc.after) acc.after = { id: p.id, photo_url: p.photo_url }
+                else if (!acc.before) acc.before = { id: p.id, photo_url: p.photo_url }
+                else if (!acc.after) acc.after = { id: p.id, photo_url: p.photo_url }
+                return acc
+              }, {} as { before?: { id: string; photo_url: string }; after?: { id: string; photo_url: string } })
+            return [it.id, mapped] as const
           }),
         )
         setPhotosByItem(Object.fromEntries(entries))
@@ -153,12 +162,12 @@ export default function InspectionEditForm({ inspection, items, franchises, user
     loadPhotos()
   }, [items])
 
-  const handleAddPhoto = async (itemId: string, file: File) => {
+  const handleAddPhoto = async (itemId: string, which: 'before' | 'after', file: File) => {
     if (!file.type.startsWith("image/")) {
       toast({ title: "Erro", description: "Selecione uma imagem", variant: "destructive" })
       return
     }
-    setUploading((prev) => ({ ...prev, [itemId]: true }))
+    setUploading((prev) => ({ ...prev, [itemId]: { ...(prev[itemId] || {}), [which]: true } }))
     try {
       const reader = new FileReader()
       reader.onloadend = async () => {
@@ -166,24 +175,29 @@ export default function InspectionEditForm({ inspection, items, franchises, user
         const res = await fetch(`/api/checklist-items/${itemId}/photos`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ photo: base64 }),
+          body: JSON.stringify({ photo: base64, type: which }),
         })
         if (!res.ok) throw new Error("Falha ao salvar foto")
         const { data } = await res.json()
+        // Inserir no slot correto
+        const inserted = (data as Array<{ id: string; photo_url: string; photo_type?: string }>)[0]
         setPhotosByItem((prev) => ({
           ...prev,
-          [itemId]: [...(prev[itemId] || []), ...data],
+          [itemId]: {
+            ...(prev[itemId] || {}),
+            [which]: { id: inserted.id, photo_url: inserted.photo_url },
+          },
         }))
-        setUploading((prev) => ({ ...prev, [itemId]: false }))
+        setUploading((prev) => ({ ...prev, [itemId]: { ...(prev[itemId] || {}), [which]: false } }))
       }
       reader.readAsDataURL(file)
     } catch (e) {
-      setUploading((prev) => ({ ...prev, [itemId]: false }))
+      setUploading((prev) => ({ ...prev, [itemId]: { ...(prev[itemId] || {}), [which]: false } }))
       toast({ title: "Erro", description: "Erro ao adicionar foto", variant: "destructive" })
     }
   }
 
-  const handleRemovePhoto = async (itemId: string, photoId: string) => {
+  const handleRemovePhoto = async (itemId: string, photoId: string, which?: 'before' | 'after') => {
     try {
       const res = await fetch(`/api/checklist-items/${itemId}/photos`, {
         method: "DELETE",
@@ -193,7 +207,10 @@ export default function InspectionEditForm({ inspection, items, franchises, user
       if (!res.ok) throw new Error()
       setPhotosByItem((prev) => ({
         ...prev,
-        [itemId]: (prev[itemId] || []).filter((p) => p.id !== photoId),
+        [itemId]: {
+          ...(prev[itemId] || {}),
+          ...(which ? { [which]: undefined } : {}),
+        },
       }))
     } catch (e) {
       toast({ title: "Erro", description: "Não foi possível remover a foto", variant: "destructive" })
@@ -205,14 +222,14 @@ export default function InspectionEditForm({ inspection, items, franchises, user
     setIsSubmitting(true)
 
     try {
-      // Validar quantidade mínima de fotos: NO >= 1, OK >= 2
+      // Validar quantidade mínima de fotos: NO (antes) >= 1, OK (antes e depois)
       for (const item of items) {
         const resp = currentResponses[item.id]
-        const photos = photosByItem[item.id] || []
-        if (resp.status === "NO" && photos.length < 1) {
+        const photos = photosByItem[item.id] || {}
+        if (resp.status === "NO" && !photos.before) {
           throw new Error(`O item "${item.item_name}" requer ao menos 1 foto quando NO.`)
         }
-        if (resp.status === "OK" && photos.length < 2) {
+        if (resp.status === "OK" && (!photos.before || !photos.after)) {
           throw new Error(`O item "${item.item_name}" requer 2 fotos (antes e depois) para marcar como OK.`)
         }
       }
@@ -405,43 +422,121 @@ export default function InspectionEditForm({ inspection, items, franchises, user
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm">Fotos</Label>
-                        <div className="flex flex-wrap gap-2">
-                          {(photosByItem[item.id] || []).map((p) => (
-                            <div key={p.id} className="relative h-24 w-24 rounded-lg border">
-                              <Image src={p.photo_url || "/placeholder.svg"} alt="Foto" fill className="rounded-lg object-cover" />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                                onClick={() => handleRemovePhoto(item.id, p.id)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
-                          <label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0]
-                                if (file) handleAddPhoto(item.id, file)
-                              }}
-                              disabled={!!uploading[item.id]}
-                            />
-                            <Camera className="h-6 w-6 text-muted-foreground" />
-                          </label>
-                        </div>
-                        {response.status === "OK" && (photosByItem[item.id]?.length || 0) < 2 && (
-                          <p className="text-sm text-destructive">Para marcar como OK, adicione 2 fotos (antes e depois).</p>
-                        )}
-                        {response.status === "NO" && (photosByItem[item.id]?.length || 0) < 1 && (
-                          <p className="text-sm text-destructive">Adicione ao menos 1 foto do problema.</p>
-                        )}
-                      </div>
+                            <Label className="text-sm">Fotos</Label>
+                            {response.status === 'OK' ? (
+                              <div className="flex flex-wrap gap-4">
+                                {/* Antes */}
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Antes</p>
+                                  <div className="relative h-24 w-24 rounded-lg border">
+                                    {photosByItem[item.id]?.before ? (
+                                      <Image src={photosByItem[item.id]!.before!.photo_url} alt="Antes" fill className="rounded-lg object-cover" />
+                                    ) : (
+                                      <label className="flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) handleAddPhoto(item.id, 'before', file)
+                                          }}
+                                          disabled={!!uploading[item.id]?.before}
+                                        />
+                                        <Camera className="h-6 w-6 text-muted-foreground" />
+                                      </label>
+                                    )}
+                                    {photosByItem[item.id]?.before && (
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                        onClick={() => handleRemovePhoto(item.id, photosByItem[item.id]!.before!.id, 'before')}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Depois */}
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Depois</p>
+                                  <div className="relative h-24 w-24 rounded-lg border">
+                                    {photosByItem[item.id]?.after ? (
+                                      <Image src={photosByItem[item.id]!.after!.photo_url} alt="Depois" fill className="rounded-lg object-cover" />
+                                    ) : (
+                                      <label className="flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) handleAddPhoto(item.id, 'after', file)
+                                          }}
+                                          disabled={!!uploading[item.id]?.after}
+                                        />
+                                        <Camera className="h-6 w-6 text-muted-foreground" />
+                                      </label>
+                                    )}
+                                    {photosByItem[item.id]?.after && (
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                        onClick={() => handleRemovePhoto(item.id, photosByItem[item.id]!.after!.id, 'after')}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Foto do problema</p>
+                                <div className="relative h-24 w-24 rounded-lg border">
+                                  {photosByItem[item.id]?.before ? (
+                                    <Image src={photosByItem[item.id]!.before!.photo_url} alt="Problema" fill className="rounded-lg object-cover" />
+                                  ) : (
+                                    <label className="flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0]
+                                          if (file) handleAddPhoto(item.id, 'before', file)
+                                        }}
+                                        disabled={!!uploading[item.id]?.before}
+                                      />
+                                      <Camera className="h-6 w-6 text-muted-foreground" />
+                                    </label>
+                                  )}
+                                  {photosByItem[item.id]?.before && (
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                      onClick={() => handleRemovePhoto(item.id, photosByItem[item.id]!.before!.id, 'before')}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {response.status === "OK" && (!photosByItem[item.id]?.before || !photosByItem[item.id]?.after) && (
+                              <p className="text-sm text-destructive">Para marcar como OK, adicione 2 fotos (antes e depois).</p>
+                            )}
+                            {response.status === "NO" && !photosByItem[item.id]?.before && (
+                              <p className="text-sm text-destructive">Adicione ao menos 1 foto do problema.</p>
+                            )}
+                          </div>
                     </div>
                   )
                 })}

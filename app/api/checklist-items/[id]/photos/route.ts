@@ -31,15 +31,29 @@ export async function POST(request: Request, { params }: Props) {
     const supabase = await createClient()
     const body = await request.json()
 
-    const photos: string[] = body.photos || (body.photo ? [body.photo] : [])
-    if (!photos || photos.length === 0) {
+    const photosInput = body.photos || (body.photo ? [{ url: body.photo, type: body.type }] : [])
+    if (!photosInput || photosInput.length === 0) {
       return NextResponse.json({ error: "Nenhuma foto enviada" }, { status: 400 })
     }
 
-    const payload = photos.map((p) => ({ checklist_item_id: id, photo_url: p }))
-    const { data, error } = await supabase.from("checklist_item_photos").insert(payload).select()
+    // Suporta itens como string ou objeto { url, type }
+    const payload = photosInput.map((p: any) => ({
+      checklist_item_id: id,
+      photo_url: typeof p === "string" ? p : p.url,
+      photo_type: typeof p === "string" ? null : p.type ?? null,
+    }))
 
-    if (error) throw error
+    // Tenta inserir com photo_type; se falhar por coluna ausente, faz fallback sem photo_type
+    const { data, error } = await supabase.from("checklist_item_photos").insert(payload).select()
+    if (error) {
+      const payloadNoType = payload.map(({ checklist_item_id, photo_url }) => ({ checklist_item_id, photo_url }))
+      const { data: dataFallback, error: errorFallback } = await supabase
+        .from("checklist_item_photos")
+        .insert(payloadNoType)
+        .select()
+      if (errorFallback) throw errorFallback
+      return NextResponse.json({ data: dataFallback })
+    }
 
     return NextResponse.json({ data })
   } catch (error) {
