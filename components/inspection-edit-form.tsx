@@ -222,17 +222,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
     setIsSubmitting(true)
 
     try {
-      // Validar quantidade mínima de fotos: NO (antes) >= 1, OK (antes e depois)
-      for (const item of items) {
-        const resp = currentResponses[item.id]
-        const photos = photosByItem[item.id] || {}
-        if (resp.status === "NO" && !photos.before) {
-          throw new Error(`O item "${item.item_name}" requer ao menos 1 foto quando NO.`)
-        }
-        if (resp.status === "OK" && (!photos.before || !photos.after)) {
-          throw new Error(`O item "${item.item_name}" requer 2 fotos (antes e depois) para marcar como OK.`)
-        }
-      }
+      // Fotos são opcionais; não bloquear o envio. Mensagens visuais orientam o usuário.
 
       const score = calculateScore()
       const rating = calculateRating(score.percentage)

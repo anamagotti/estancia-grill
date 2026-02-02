@@ -215,30 +215,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       return
     }
 
-    // Validação de fotos por item conforme status
-    try {
-      const activeSectorId = sector
-      const filteredChecklist = getFilteredChecklist(activeSectorId)
-      for (const section of filteredChecklist) {
-        for (const item of section.items) {
-          const key = `${activeSectorId}-${section.title}-${item.item}`
-          const response = responses[key] || { status: "NO", observation: "", responsible: "" }
-          if (response.status === "NO" && !response.beforePhoto) {
-            throw new Error(`O item "${item.item}" requer ao menos 1 foto quando marcado como NO.`)
-          }
-          if (response.status === "OK" && (!response.beforePhoto || !response.afterPhoto)) {
-            throw new Error(`O item "${item.item}" requer 2 fotos (antes e depois) para marcar como OK.`)
-          }
-        }
-      }
-    } catch (err) {
-      toast({
-        title: "Verifique as fotos",
-        description: err instanceof Error ? err.message : "Há itens sem a quantidade mínima de fotos",
-        variant: "destructive",
-      })
-      return
-    }
+    // Fotos são opcionais. Validações visuais permanecem, mas não bloqueiam o envio.
 
     setIsSubmitting(true)
 
