@@ -387,13 +387,13 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="OK" id={`${key}-ok`} />
                               <Label htmlFor={`${key}-ok`} className="cursor-pointer font-normal">
-                                OK
+                                {activeSectorId === "preventiva" ? "Feito" : "OK"}
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="NO" id={`${key}-no`} />
                               <Label htmlFor={`${key}-no`} className="cursor-pointer font-normal">
-                                NO
+                                {activeSectorId === "preventiva" ? "Não feito" : "NO"}
                               </Label>
                             </div>
                           </RadioGroup>
@@ -539,10 +539,18 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                               <p className="text-sm text-muted-foreground">Adicionando foto...</p>
                             ) : null}
                             {response.status === "OK" && (!response.beforePhoto || !response.afterPhoto) && (
-                              <p className="text-sm text-destructive">Para marcar como "OK", adicione 2 fotos (antes e depois).</p>
+                              <p className="text-sm text-destructive">
+                                {activeSectorId === "preventiva"
+                                  ? "Para marcar como 'Feito', adicione 2 fotos (antes e depois)."
+                                  : "Para marcar como 'OK', adicione 2 fotos (antes e depois)."}
+                              </p>
                             )}
                             {response.status === "NO" && !response.beforePhoto && (
-                              <p className="text-sm text-destructive">Adicione pelo menos 1 foto do problema.</p>
+                              <p className="text-sm text-destructive">
+                                {activeSectorId === "preventiva"
+                                  ? "Para marcar como 'Não feito', adicione ao menos 1 foto do problema."
+                                  : "Adicione pelo menos 1 foto do problema."}
+                              </p>
                             )}
                           </div>
                         </div>
