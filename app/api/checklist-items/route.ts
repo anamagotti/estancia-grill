@@ -6,6 +6,14 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     const { items } = await request.json()
 
+    // Validação básica: inspection_id deve ser UUID em todos os itens
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    for (const it of items) {
+      if (!it.inspection_id || typeof it.inspection_id !== "string" || !uuidRegex.test(it.inspection_id)) {
+        return NextResponse.json({ error: "inspection_id inválido ao salvar itens" }, { status: 400 })
+      }
+    }
+
     const itemsToInsert = items.map((item: any) => ({
       inspection_id: item.inspection_id,
       category: item.category,
@@ -40,6 +48,12 @@ export async function POST(request: Request) {
         })
 
         // Tenta inserir com photo_type; se falhar, tenta sem photo_type
+        // Garantir que o id do item inserido é UUID válido
+        if (!insertedItem?.id || !uuidRegex.test(insertedItem.id)) {
+          console.error("[v0] Invalid checklist item id, skipping photos:", insertedItem?.id)
+          continue
+        }
+
         const { error: photoError } = await supabase.from("checklist_item_photos").insert(photosPayload)
         if (photoError) {
           const payloadNoType = photosPayload.map(({ checklist_item_id, photo_url }) => ({ checklist_item_id, photo_url }))
