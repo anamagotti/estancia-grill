@@ -32,11 +32,13 @@ export default async function NewInspectionPage({
     redirect("/dashboard")
   }
 
-  // Buscar franquias disponíveis
-  const { data: franchises } = await supabase.from("franchises").select("*").order("name")
-
-  // Buscar dados do usuário para pegar a franquia padrão
-  const { data: userData } = await supabase.from("users").select("franchise_id").eq("id", user.id).single()
+  // Fixar a franquia: Estância Grill em Bauru
+  const { data: franchise } = await supabase
+    .from("franchises")
+    .select("*")
+    .eq("name", "Estância Grill")
+    .eq("location", "Bauru")
+    .single()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
@@ -51,8 +53,8 @@ export default async function NewInspectionPage({
         {sector ? (
           <InspectionForm
             userId={user.id}
-            franchises={franchises || []}
-            defaultFranchiseId={userData?.franchise_id || ""}
+            franchises={franchise ? [franchise] : []}
+            defaultFranchiseId={franchise?.id || ""}
             defaultSector={sector}
           />
         ) : (

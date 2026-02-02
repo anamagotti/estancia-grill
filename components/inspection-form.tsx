@@ -309,19 +309,11 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="franchise">Franquia *</Label>
-              <Select value={franchiseId} onValueChange={setFranchiseId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a unidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {franchises.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Unidade</Label>
+              <Input
+                value={(franchises.find((f) => f.id === franchiseId)?.name || "Estância Grill") + " — Bauru"}
+                disabled
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="inspectionDate">Data da Vistoria</Label>
