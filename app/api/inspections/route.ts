@@ -19,6 +19,34 @@ export async function POST(request: Request) {
       }
     }
 
+    // Garantir franchise_id válido: se vier vazio/indefinido, buscar ou criar Estância Grill — Bauru
+    if (!body.franchise_id || typeof body.franchise_id !== "string" || body.franchise_id.trim() === "") {
+      // Tentar encontrar
+      const { data: foundFr } = await supabase
+        .from("franchises")
+        .select("id")
+        .eq("name", "Estância Grill")
+        .eq("location", "Bauru")
+        .limit(1)
+      let franchiseId: string | undefined = foundFr && foundFr.length > 0 ? foundFr[0].id : undefined
+
+      // Se não existir, criar
+      if (!franchiseId) {
+        const { data: createdFr, error: createFrError } = await supabase
+          .from("franchises")
+          .insert({ name: "Estância Grill", location: "Bauru" })
+          .select("id")
+          .single()
+        if (createFrError) {
+          console.error("Supabase error creating default franchise:", createFrError)
+          return NextResponse.json({ error: createFrError.message }, { status: 500 })
+        }
+        franchiseId = createdFr.id
+      }
+
+      body.franchise_id = franchiseId
+    }
+
     const { data, error } = await supabase.from("inspections").insert([body]).select().single()
 
     if (error) {
