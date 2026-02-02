@@ -218,12 +218,14 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       const sectorInfo = SECTORS.find((s) => s.id === activeSectorId)
       const score = calculateSectorScore(activeSectorId)
       const rating = calculateRating(score.percentage)
+      // Fallback de franquia: usa a primeira disponível se o id atual estiver vazio
+      const effectiveFranchiseId = franchiseId || franchises[0]?.id || null
 
       const inspectionResponse = await fetch("/api/inspections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          franchise_id: franchiseId,
+          franchise_id: effectiveFranchiseId,
           inspector_id: userId,
           inspection_date: inspectionDate,
           sector: activeSectorId,
@@ -241,6 +243,9 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       }
 
       const { data: inspection } = await inspectionResponse.json()
+      if (!inspection?.id) {
+        throw new Error("Falha ao criar vistoria (ID vazio)")
+      }
 
       const filteredChecklist = getFilteredChecklist(activeSectorId)
       const items = filteredChecklist.flatMap((section) =>
