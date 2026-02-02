@@ -9,7 +9,9 @@ export async function POST(request: Request) {
     // Validação básica: inspection_id deve ser UUID em todos os itens
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     for (const it of items) {
+      if (typeof it.inspection_id === "string") it.inspection_id = it.inspection_id.trim()
       if (!it.inspection_id || typeof it.inspection_id !== "string" || !uuidRegex.test(it.inspection_id)) {
+        console.error("[api/checklist-items] inspection_id inválido:", it.inspection_id)
         return NextResponse.json({ error: "inspection_id inválido ao salvar itens" }, { status: 400 })
       }
     }

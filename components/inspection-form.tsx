@@ -221,13 +221,24 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
       // Fallback de franquia: usa a primeira disponível se o id atual estiver vazio
       const effectiveFranchiseId = franchiseId || franchises[0]?.id || null
 
+      // Normaliza data (YYYY-MM-DD)
+      const normalizedDate = (() => {
+        try {
+          const d = new Date(inspectionDate)
+          if (isNaN(d.getTime())) return new Date().toISOString().split("T")[0]
+          return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0]
+        } catch (_) {
+          return new Date().toISOString().split("T")[0]
+        }
+      })()
+
       const inspectionResponse = await fetch("/api/inspections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           franchise_id: effectiveFranchiseId,
-          inspector_id: userId,
-          inspection_date: inspectionDate,
+          inspector_id: (userId || "").trim(),
+          inspection_date: normalizedDate,
           sector: activeSectorId,
           total_points: score.total,
           points_achieved: score.achieved,
