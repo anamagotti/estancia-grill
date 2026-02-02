@@ -26,7 +26,7 @@ export default async function InspectionDetailPage({ params }: Props) {
   // Buscar vistoria
   const { data: inspection, error } = await supabase
     .from("inspections")
-    .select("*, franchises(name, location), users(full_name, email)")
+    .select("*, franchises(name, location)")
     .eq("id", id)
     .single()
 
@@ -172,7 +172,7 @@ export default async function InspectionDetailPage({ params }: Props) {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Inspetor</p>
-                  <p className="font-medium">Robson Alexandre</p>
+                  <p className="font-medium">Vistoria</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data</p>
