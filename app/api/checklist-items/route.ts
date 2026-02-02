@@ -24,13 +24,14 @@ export async function POST(request: Request) {
       points: item.points,
       observation: item.observation,
       responsible: item.responsible,
-      photo_url: item.photo_url,
+      // Evitar inserir base64 nesta coluna para não conflitar com restrições futuras
+      photo_url: null,
     }))
 
     const { data, error } = await supabase.from("checklist_items").insert(itemsToInsert).select()
 
     if (error) {
-      console.error("Supabase error creating checklist items:", error)
+      console.error("Supabase error creating checklist items:", error, "payload count:", itemsToInsert?.length)
       return NextResponse.json({ error: error.message, details: error }, { status: 500 })
     }
 
