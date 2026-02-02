@@ -206,14 +206,7 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!franchiseId) {
-      toast({
-        title: "Erro",
-        description: "Selecione a franquia",
-        variant: "destructive",
-      })
-      return
-    }
+    // Franquia está fixa via página; não bloquear envio mesmo se ausente.
 
     // Fotos são opcionais. Validações visuais permanecem, mas não bloqueiam o envio.
 
