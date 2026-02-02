@@ -418,7 +418,6 @@ export default function InspectionForm({ userId, franchises, defaultFranchiseId,
                                 onChange={(e) => handleItemChange(key, "observation", e.target.value)}
                                 placeholder="Descreva a situação..."
                                 rows={2}
-                                required
                               />
                             </div>
                             <div className="space-y-2">

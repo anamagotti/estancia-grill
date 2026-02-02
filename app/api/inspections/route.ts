@@ -6,6 +6,19 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     const body = await request.json()
 
+    // Garantir que existe um registro em public.users para o inspector
+    const { data: authUser } = await supabase.auth.getUser()
+    const inspectorId: string | undefined = body.inspector_id
+    if (authUser?.user && inspectorId === authUser.user.id) {
+      const { data: existing } = await supabase.from("users").select("id").eq("id", inspectorId).single()
+      if (!existing) {
+        // Tentar criar o usuário mínimo obedecendo RLS (auth.uid() = id)
+        await supabase
+          .from("users")
+          .insert({ id: inspectorId, email: authUser.user.email || "", full_name: authUser.user.user_metadata?.full_name || null })
+      }
+    }
+
     const { data, error } = await supabase.from("inspections").insert([body]).select().single()
 
     if (error) {
