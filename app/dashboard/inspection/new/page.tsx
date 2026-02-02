@@ -32,13 +32,25 @@ export default async function NewInspectionPage({
     redirect("/dashboard")
   }
 
-  // Fixar a franquia: Estância Grill em Bauru
-  const { data: franchise } = await supabase
-    .from("franchises")
-    .select("*")
-    .eq("name", "Estância Grill")
-    .eq("location", "Bauru")
-    .single()
+  // Fixar a franquia: Estância Grill em Bauru, com fallback para franquia do usuário
+  let franchise: any = null
+  {
+    const { data: exact } = await supabase
+      .from("franchises")
+      .select("*")
+      .ilike("name", "Estância%")
+      .ilike("location", "Bauru%")
+      .limit(1)
+    if (exact && exact.length > 0) {
+      franchise = exact[0]
+    } else {
+      const { data: userData } = await supabase.from("users").select("franchise_id").eq("id", user.id).single()
+      if (userData?.franchise_id) {
+        const { data: fallback } = await supabase.from("franchises").select("*").eq("id", userData.franchise_id).single()
+        franchise = fallback
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
